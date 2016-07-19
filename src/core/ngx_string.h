@@ -1,3 +1,6 @@
+/**
+ * @file 此文件定义了 Nginx对于字符串的封装和相应的操作函数
+ */
 
 /*
  * Copyright (C) Igor Sysoev
@@ -12,28 +15,37 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+/**
+ * Nginx对字符串封装的结构体
+ * Nginx中不保存字符串最后的一个'\0'
+ */
 typedef struct {
-    size_t      len;
-    u_char     *data;
+    size_t      len;/**< 字符串的长度*/
+    u_char     *data;/**< 指向字符串的指针*/
 } ngx_str_t;
-
-
+/**
+ * Nginx对键值对的封装,key和val都为 ngx_str_t类型
+ */
 typedef struct {
-    ngx_str_t   key;
-    ngx_str_t   value;
+    ngx_str_t   key;/**< key*/
+    ngx_str_t   value;/**< value*/
 } ngx_keyval_t;
 
-
+/**
+ * Nginx对值的封装,这个结构体可以表示任意类型的值
+ */
 typedef struct {
     unsigned    len:28;
 
+	/**
+	 * 以下位4个标志位
+	 */
     unsigned    valid:1;
     unsigned    no_cacheable:1;
     unsigned    not_found:1;
     unsigned    escape:1;
 
-    u_char     *data;
+    u_char     *data;/**< 保存值的地址*/
 } ngx_variable_value_t;
 
 
@@ -146,6 +158,10 @@ ngx_copy(u_char *dst, u_char *src, size_t len)
 
 u_char *ngx_cpystrn(u_char *dst, u_char *src, size_t n);
 u_char *ngx_pstrdup(ngx_pool_t *pool, ngx_str_t *src);
+/**
+ * 注
+ * ngx_cdecl为宏定义, 在 ngx_config.h:74行有定义
+ */
 u_char * ngx_cdecl ngx_sprintf(u_char *buf, const char *fmt, ...);
 u_char * ngx_cdecl ngx_snprintf(u_char *buf, size_t max, const char *fmt, ...);
 u_char * ngx_cdecl ngx_slprintf(u_char *buf, u_char *last, const char *fmt,
