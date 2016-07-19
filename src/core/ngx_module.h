@@ -234,26 +234,27 @@
 #define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0
 
 /**
-  *Nginx 关于模块的接口，任何Nginx中包含的模块都需要实现一个此结构体
+  * Nginx 关于模块的接口，任何Nginx中需要包含的任何模块都需要实现一个此结构体
   */
 struct ngx_module_s {
-    ngx_uint_t            ctx_index;  /// 在同类型模块中的索引(core、event、http、mail等)
-    ngx_uint_t            index;      /// 按照模块在ngx_modules[]数组中的声明顺序的索引
+    ngx_uint_t            ctx_index;  /**< 在同类型模块中的索引(core、event、http、mail等)*/
+    ngx_uint_t            index;      /**< 按照模块在ngx_modules[]数组中的声明顺序的索引*/
 
-    char                 *name;       /// 模块名
-    ngx_uint_t            spare0;     /// 保留变量，未使用
+    char                 *name;       /**< 模块名*/
+    ngx_uint_t            spare0;     /**< 保留变量，未使用*/
     ngx_uint_t            spare1;
 
-    ngx_uint_t            version;    /// 模块的版本
+    ngx_uint_t            version;    /**< 模块的版本*/
     const char           *signature;
 
-    void                 *ctx;      /// 模块的上下文,因为不同的模块需要保存独有的结构，例如 HTTP模块中指向
-                                    /// ngx_http_module_t结构体
-    ngx_command_t        *commands; /// 模块的指令集，解析配置文件时需要用到
-    ngx_uint_t            type;     /// 模块的类型
+    void                 *ctx;      /**< 模块的上下文,因为不同的模块需要保存独有的结构，
+										 需要有不同的特性，
+										 例如 HTTP模块中指向ngx_http_module_t结构体*/
+    ngx_command_t        *commands; /**< 模块的指令集，解析配置文件时需要用到*/
+    ngx_uint_t            type;     /**< 模块的类型*/
 
     /**
-      *回掉函数，按名称可知道调用的时间
+      * 回调函数，按名称可知道调用的时间
       */
     ngx_int_t           (*init_master)(ngx_log_t *log);
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
@@ -263,7 +264,7 @@ struct ngx_module_s {
     void                (*exit_process)(ngx_cycle_t *cycle);
     void                (*exit_master)(ngx_cycle_t *cycle);
     /**
-      *保留字段，一般设置为空(如结构体上NGX_MODULE_V1_PADDING的定义为8个0)
+      * 保留字段，一般设置为空(如结构体上NGX_MODULE_V1_PADDING的定义为8个0)
       */
     uintptr_t             spare_hook0;
     uintptr_t             spare_hook1;
@@ -276,7 +277,7 @@ struct ngx_module_s {
 };
 
 /**
-  *每个模块都有一个核心模块,再由核心模块控制其他模块
+  * 每个模块都有一个核心模块,再由核心模块控制其他模块
   */
 typedef struct {
     ngx_str_t             name;
