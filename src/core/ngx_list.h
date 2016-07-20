@@ -21,9 +21,9 @@ typedef struct ngx_list_part_s  ngx_list_part_t;
  * 但是可能会造成一部分空间的未使用
  */
 struct ngx_list_part_s {
-    void             *elts;/**< 数组的起始地址*/
-    ngx_uint_t        nelts;/**< 表示数组中已有的元素个数*/
-    ngx_list_part_t  *next;/**< 表示下一个节点*/
+    void             *elts;///< 数组的起始地址*
+    ngx_uint_t        nelts;///< 表示数组中已有的元素个数
+    ngx_list_part_t  *next;///< 表示下一个节点
 };
 /**
  * Nginx中对于链表的封装
@@ -31,11 +31,11 @@ struct ngx_list_part_s {
  * @see 《深入理解Nginx》 P73
  */
 typedef struct {
-    ngx_list_part_t  *last;	/**< 链表的最后一个数组元素*/
-    ngx_list_part_t   part;	/**< 链表的首个数组元素*/
-    size_t            size;	/**< 表示一个 ngx_list_part_s数组中一个数组元素的最大大小*/
-    ngx_uint_t        nalloc;	/**< 表示一个 ngx_list_part_s 的容量*/
-    ngx_pool_t       *pool;	/**< 内存池*/
+    ngx_list_part_t  *last;	///< 链表的最后一个数组元素
+    ngx_list_part_t   part;	///< 链表的首个数组元素
+    size_t            size;	///< 表示一个 ngx_list_part_s数组中一个数组元素的最大大小
+    ngx_uint_t        nalloc;///< 表示一个 ngx_list_part_s 的容量
+    ngx_pool_t       *pool;	///< 内存池
 } ngx_list_t;
 
 /**

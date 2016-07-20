@@ -20,15 +20,15 @@
  * Nginx中不保存字符串最后的一个'\0'
  */
 typedef struct {
-    size_t      len;/**< 字符串的长度*/
-    u_char     *data;/**< 指向字符串的指针*/
+    size_t      len;///< 字符串的长度
+    u_char     *data;///< 指向字符串的指针
 } ngx_str_t;
 /**
  * Nginx对键值对的封装,key和val都为 ngx_str_t类型
  */
 typedef struct {
-    ngx_str_t   key;/**< key*/
-    ngx_str_t   value;/**< value*/
+    ngx_str_t   key;
+    ngx_str_t   value;
 } ngx_keyval_t;
 
 /**
@@ -45,7 +45,7 @@ typedef struct {
     unsigned    not_found:1;
     unsigned    escape:1;
 
-    u_char     *data;/**< 保存值的地址*/
+    u_char     *data;///< 保存值的地址
 } ngx_variable_value_t;
 
 

@@ -34,50 +34,52 @@ struct ngx_shm_zone_s {
     ngx_uint_t                noreuse;  /* unsigned  noreuse:1; */
 };
 
-/**关于ngx_cycle_s结构体可以参考:
- *@see http://blog.csdn.net/livelylittlefish/article/details/7247080
- *Ngxin的初始化围绕此结构体进行
+/**
+ * 关于ngx_cycle_s结构体可以参考:
+ * @see http://blog.csdn.net/livelylittlefish/article/details/7247080
+ * 
+ * Ngxin的初始化围绕此结构体进行
  */
 struct ngx_cycle_s {
-    void                  ****conf_ctx; /// 所有模块的配置上下文数组
-    ngx_pool_t               *pool;	    /// 内存池
+    void                  ****conf_ctx; ///< 所有模块的配置上下文数组
+    ngx_pool_t               *pool;	    ///< 内存池
 
-    ngx_log_t                *log;	    /// 日志
+    ngx_log_t                *log;	    ///< 日志
     ngx_log_t                 new_log;
 
-    ngx_uint_t                log_use_stderr;  /* unsigned  log_use_stderr:1; */
+    ngx_uint_t                log_use_stderr;  ///< unsigned  log_use_stderr:1;
 
-    ngx_connection_t        **files;	/// 连接文件
-    ngx_connection_t         *free_connections; /// 空闲连接
-    ngx_uint_t                free_connection_n;/// 空闲连接的个数
+    ngx_connection_t        **files;	///< 连接文件
+    ngx_connection_t         *free_connections; ///< 空闲连接
+    ngx_uint_t                free_connection_n;///< 空闲连接的个数
 
-    ngx_module_t            **modules;	/// 模块数组
-    ngx_uint_t                modules_n;/// 模块数组的个数
-    ngx_uint_t                modules_used;    /* unsigned  modules_used:1; */
+    ngx_module_t            **modules;	///< 模块数组
+    ngx_uint_t                modules_n;///< 模块数组的个数
+    ngx_uint_t                modules_used;///< unsigned  modules_used:1;
 
-    ngx_queue_t               reusable_connections_queue;/// 再连接队列
+    ngx_queue_t               reusable_connections_queue;///< 再连接队列
 
-    ngx_array_t               listening;  /// 监听套接字的数组
-    ngx_array_t               paths;      /// 路径的数组
+    ngx_array_t               listening;  ///< 监听套接字的数组
+    ngx_array_t               paths;      ///< 路径的数组
     ngx_array_t               config_dump;
-    ngx_list_t                open_files;	/// 打开文件的链表
-    ngx_list_t                shared_memory;	/// 共享内存的链表
+    ngx_list_t                open_files;	///< 打开文件的链表
+    ngx_list_t                shared_memory;	///< 共享内存的链表
 
-    ngx_uint_t                connection_n;	/// 连接个数
-    ngx_uint_t                files_n;		/// 打开文件个数
+    ngx_uint_t                connection_n;	///< 连接个数
+    ngx_uint_t                files_n;		///< 打开文件个数
 
-    ngx_connection_t         *connections;	/// 链接
-    ngx_event_t              *read_events;	/// 读事件
-    ngx_event_t              *write_events;	/// 写事件
+    ngx_connection_t         *connections;	///< 链接
+    ngx_event_t              *read_events;	///< 读事件
+    ngx_event_t              *write_events;	///< 写事件
 
-    ngx_cycle_t              *old_cycle;    //旧的循环
+    ngx_cycle_t              *old_cycle;    ///< 旧的循环
 
-    ngx_str_t                 conf_file;    /// 配置文件
-    ngx_str_t                 conf_param;   /// 配置参数
-    ngx_str_t                 conf_prefix;  /// 配置前缀
-    ngx_str_t                 prefix;		    /// 前缀
-    ngx_str_t                 lock_file;	  /// 锁文件
-    ngx_str_t                 hostname;		  /// 主机名
+    ngx_str_t                 conf_file;    ///< 配置文件
+    ngx_str_t                 conf_param;   ///< 配置参数
+    ngx_str_t                 conf_prefix;  ///< 配置前缀
+    ngx_str_t                 prefix;		    ///< 前缀
+    ngx_str_t                 lock_file;	  ///< 锁文件
+    ngx_str_t                 hostname;		  ///< 主机名
 };
 
 

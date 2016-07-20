@@ -73,14 +73,18 @@
 
 #define NGX_MAX_CONF_ERRSTR  1024
 
-
+/**
+ * 提供了 ngx_command_t的定义
+ * 每一个模块在设置自己感兴趣的配置项时都需要实现 ngx_command_t接口
+ * 此实现保存在 ngx_module_t.commands指针变量中
+ */
 struct ngx_command_s {
-    ngx_str_t             name;
-    ngx_uint_t            type;
-    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-    ngx_uint_t            conf;
-    ngx_uint_t            offset;
-    void                 *post;
+    ngx_str_t             name;	///< 配置项名称
+    ngx_uint_t            type;	///< 配置项类型,由宏定义加以区分
+    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);	///< 匹配到配置项后的回调函数
+    ngx_uint_t            conf;	///< 配置文件中的偏移量
+    ngx_uint_t            offset;///< 预设的解析方法配置项
+    void                 *post;///< 配置项读取后的处理方法,必须是 ngx_conf_post_t指针
 };
 
 #define ngx_null_command  { ngx_null_string, 0, NULL, 0, 0, NULL }

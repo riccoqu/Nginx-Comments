@@ -20,28 +20,28 @@ typedef struct ngx_buf_s  ngx_buf_t;
   * Nginx中表示缓冲区的结构体
   */
 struct ngx_buf_s {
-    u_char          *pos;       /// 保存位置，可以代表当前应该从哪个位置开始处理
-    u_char          *last;      /// 表示有效内容的末尾位置
-    off_t            file_pos;  /// 处理文件时使用的两个变量，表示当前偏移量和
-    off_t            file_last; /// 末尾位置
+    u_char          *pos;       ///< 保存位置，可以代表当前应该从哪个位置开始处理
+    u_char          *last;      ///< 表示有效内容的末尾位置
+    off_t            file_pos;  ///< 处理文件时使用的两个变量，表示当前偏移量和
+    off_t            file_last; ///< 末尾位置
 
-    u_char          *start;         /* start of buffer */
-    u_char          *end;           /* end of buffer */
-    ngx_buf_tag_t    tag;           /// 缓冲区的类型,指向的是 ngx_module_t类型
-    ngx_file_t      *file;          /// 引用的文件
-    ngx_buf_t       *shadow;        /// 影子缓冲区，转发时用到
+    u_char          *start;         ///< start of buffer
+    u_char          *end;           ///< end of buffer
+    ngx_buf_tag_t    tag;           ///< 缓冲区的类型,指向的是 ngx_module_t类型
+    ngx_file_t      *file;          ///< 引用的文件
+    ngx_buf_t       *shadow;        ///< 影子缓冲区，转发时用到
 
 
-    /* the buf's content could be changed */
+    /// the buf's content could be changed
     unsigned         temporary:1;
 
-    /*
+    /**
      * the buf's content is in a memory cache or in a read only memory
      * and must not be changed
      */
     unsigned         memory:1;
 
-    /* the buf's content is mmap()ed and must not be changed */
+    /// the buf's content is mmap()ed and must not be changed
     unsigned         mmap:1;
     /// 表示内存可回收
     unsigned         recycled:1;
@@ -60,21 +60,22 @@ struct ngx_buf_s {
     /// 表示当前缓冲区是否属于临时文件
     unsigned         temp_file:1;
 
-    /* STUB */ int   num;
+    /// STUB int   num;
 };
 
-
-struct ngx_chain_s {
-    ngx_buf_t    *buf;  ///指向当前缓冲区
-    ngx_chain_t  *next; ///指向下一个缓冲区
-};
 /**
- *如果这是最后一个ngx_chain_t，则需要把next置为NULL
- *
- *向用户发送HTTP包体时，就要传入ngx_chain_t链表对象
- *注意:如果是最后一个ngx_chain_t，那么必须将next置为NULL，
- *否则永远不会发送成功，而且这个请求将一直不会结束。
+ * 该结构体配合 ngx_buf_t的使用
  */
+struct ngx_chain_s {
+    ngx_buf_t    *buf;///< 指向当前缓冲区
+	
+	///指向下一个缓冲区
+    ngx_chain_t  *next; /**< 指向下一个缓冲区, 如果这是最后一个ngx_chain_t，
+							 则需要把next置为NULL向用户发送HTTP包体时，就要
+							 传入ngx_chain_t链表对象注意:如果是最后一个ngx_chain_t，
+							 那么必须将next置为NULL，否则永远不会发送成功，
+							 而且这个请求将一直不会结束*/
+};
 
 typedef struct {
     ngx_int_t    num;
@@ -91,6 +92,11 @@ typedef void (*ngx_output_chain_aio_pt)(ngx_output_chain_ctx_t *ctx,
     ngx_file_t *file);
 #endif
 
+/**
+ * ngx_output_chain_ctx_t结构体用于保存发送的上下文，
+ * 因为Nginx默认采用ET模式，所以数据可能不会一次发送完，
+ * 需要这个结构体保存当前发送的进度
+ */
 struct ngx_output_chain_ctx_s {
     ngx_buf_t                   *buf;
     ngx_chain_t                 *in;
