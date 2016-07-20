@@ -19,13 +19,19 @@ typedef ngx_int_t   ngx_rbtree_key_int_t;
 
 typedef struct ngx_rbtree_node_s  ngx_rbtree_node_t;
 
+/**
+ * Nginx关于红黑树节点的定义,Nginx中红黑树的用法有点相似于 ngx_queue_s 需要在自定义的结构体中
+ * 包含 ngx_rbtree_node_t来表示节点。
+ * 同样,操作的时候也需要传入结构体的 ngx_rbtree_t变量
+ * @see 《深入理解Nginx》 P227
+ */
 struct ngx_rbtree_node_s {
-    ngx_rbtree_key_t       key;
-    ngx_rbtree_node_t     *left;
-    ngx_rbtree_node_t     *right;
-    ngx_rbtree_node_t     *parent;
-    u_char                 color;
-    u_char                 data;
+    ngx_rbtree_key_t       key;///< 无符号整形的关键字,是树排序的主要依据
+    ngx_rbtree_node_t     *left;///< 左子节点
+    ngx_rbtree_node_t     *right;///< 右子节点
+    ngx_rbtree_node_t     *parent;///< 父节点
+    u_char                 color;///< 当前节点的颜色,0为黑,1为红
+    u_char                 data;///< 只有一个字节,一般不用 
 };
 
 
@@ -34,13 +40,18 @@ typedef struct ngx_rbtree_s  ngx_rbtree_t;
 typedef void (*ngx_rbtree_insert_pt) (ngx_rbtree_node_t *root,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
 
+/**
+ * Nginx关于红黑树的结构体
+ */
 struct ngx_rbtree_s {
-    ngx_rbtree_node_t     *root;
-    ngx_rbtree_node_t     *sentinel;
-    ngx_rbtree_insert_pt   insert;
+    ngx_rbtree_node_t     *root;///< 指向树的根节点
+    ngx_rbtree_node_t     *sentinel;///< 指向哨兵节点
+    ngx_rbtree_insert_pt   insert;///< 表示红黑树添加元素的函数指针,决定在添加新节点时的行为时替换还是新增
 };
 
-
+/**
+ * 初始化树的宏定义函数
+ */
 #define ngx_rbtree_init(tree, s, i)                                           \
     ngx_rbtree_sentinel_init(s);                                              \
     (tree)->root = s;                                                         \
@@ -50,8 +61,22 @@ struct ngx_rbtree_s {
 
 void ngx_rbtree_insert(ngx_rbtree_t *tree, ngx_rbtree_node_t *node);
 void ngx_rbtree_delete(ngx_rbtree_t *tree, ngx_rbtree_node_t *node);
+
+/**
+ * 向树中添加节点,并且每个节点关键字唯一
+ * @param root 树的根节点
+ * @param node 新插入节点的指针
+ * @param sentinel 树初始化时哨兵节点的指针
+ */
 void ngx_rbtree_insert_value(ngx_rbtree_node_t *root, ngx_rbtree_node_t *node,
     ngx_rbtree_node_t *sentinel);
+
+/**
+ * 向树中添加节点,每个节点的关键字表示时间或者时间差,关键字唯一
+ * @param root 树的根节点
+ * @param node 新插入节点的指针
+ * @param sentinel 树初始化时哨兵节点的指针
+ */
 void ngx_rbtree_insert_timer_value(ngx_rbtree_node_t *root,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
 
