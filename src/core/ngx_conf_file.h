@@ -270,6 +270,13 @@ char *ngx_conf_check_num_bounds(ngx_conf_t *cf, void *post, void *data);
 
 
 char *ngx_conf_param(ngx_conf_t *cf);
+
+/**
+ * 此函数在 ngx_init_cycle()中被第一次用到,用来解析配置项
+ * 该函数为一个间接递归函数(既在由它调用的函数内还会调用它)
+ * @param cf 一个 ngx_cont_t 变量的指针
+ * @param filename 为配置文件的路径名
+ */
 char *ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename);
 char *ngx_conf_include(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 

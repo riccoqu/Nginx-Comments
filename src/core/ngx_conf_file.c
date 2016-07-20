@@ -204,6 +204,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
 
     for ( ;; ) {
+		//循环读取 token,并保存当前的状态到 rc中
         rc = ngx_conf_read_token(cf);
 
         /*
