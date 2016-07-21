@@ -8,6 +8,9 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
+/**
+ * ngx_conf_read_token() 函数的缓冲区大小,决定了一次从配置文件中读取的字节数
+ */
 #define NGX_CONF_BUFFER  4096
 
 static ngx_int_t ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last);
@@ -315,8 +318,11 @@ done:
 
     return NGX_CONF_OK;
 }
-
-
+/**
+ * 此函数用于完成 token到 Ngxin中变量的转换
+ * 因为 Nginx中每个 ngx_conf_t变量对应一个 ngx_command_t变量,所以需要循环遍历所有的模块寻找
+ * 能够匹配到的项
+ */
 static ngx_int_t
 ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 {

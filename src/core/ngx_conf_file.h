@@ -89,21 +89,25 @@ struct ngx_command_s {
 
 #define ngx_null_command  { ngx_null_string, 0, NULL, 0, 0, NULL }
 
-
+/**
+ * 打开文件的信息结构体
+ */
 struct ngx_open_file_s {
-    ngx_fd_t              fd;
-    ngx_str_t             name;
+    ngx_fd_t              fd;///< 文件描述符
+    ngx_str_t             name;///< 文件名
 
     void                (*flush)(ngx_open_file_t *file, ngx_log_t *log);
-    void                 *data;
+    void                 *data;///< 存放的数据
 };
 
-
+/**
+ * 配置文件的相关信息
+ */
 typedef struct {
-    ngx_file_t            file;
-    ngx_buf_t            *buffer;
+    ngx_file_t            file;///< 文件的属性
+    ngx_buf_t            *buffer;///< 文件的内容
     ngx_buf_t            *dump;
-    ngx_uint_t            line;
+    ngx_uint_t            line;///< 文件的行数
 } ngx_conf_file_t;
 
 
@@ -116,23 +120,25 @@ typedef struct {
 typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf,
     ngx_command_t *dummy, void *conf);
 
-
+/**
+ * Nginx中封装配置项的结构体
+ */
 struct ngx_conf_s {
-    char                 *name;
-    ngx_array_t          *args;
+    char                 *name;///< 存放当前解析到的指令
+    ngx_array_t          *args;///< 存放该指令包含的所有参数
 
-    ngx_cycle_t          *cycle;
-    ngx_pool_t           *pool;
-    ngx_pool_t           *temp_pool;
-    ngx_conf_file_t      *conf_file;
-    ngx_log_t            *log;
+    ngx_cycle_t          *cycle;///< 当前 cycle_t
+    ngx_pool_t           *pool;///< 内存池
+    ngx_pool_t           *temp_pool;///< 用于解析配置文件的临时内存池,解析完后释放
+    ngx_conf_file_t      *conf_file;///< 存放Nginx配置文件的相关信息
+    ngx_log_t            *log;///< 描述日志文件的相关属性
 
-    void                 *ctx;
-    ngx_uint_t            module_type;
-    ngx_uint_t            cmd_type;
+    void                 *ctx;///< 描述指令的上下文
+    ngx_uint_t            module_type;///<  支持该指令的模块类型
+    ngx_uint_t            cmd_type;///< 指令的类型
 
-    ngx_conf_handler_pt   handler;
-    char                 *handler_conf;
+    ngx_conf_handler_pt   handler;///< 指令自定义的处理函数
+    char                 *handler_conf;///< 自定义处理函数需要的相关配置
 };
 
 
