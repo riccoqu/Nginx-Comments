@@ -8,7 +8,7 @@
 #ifndef _NGX_CONFIG_H_INCLUDED_
 #define _NGX_CONFIG_H_INCLUDED_
 
-
+//整个文件只有这两处 #include操作, ngx_auto_headers.h为脚本文件生成的头文件
 #include <ngx_auto_headers.h>
 
 
@@ -58,11 +58,12 @@
 #define ngx_random               random
 
 /* TODO: #ifndef */
+//定义 Ngxin信号
 #define NGX_SHUTDOWN_SIGNAL      QUIT
 #define NGX_TERMINATE_SIGNAL     TERM
 #define NGX_NOACCEPT_SIGNAL      WINCH
 #define NGX_RECONFIGURE_SIGNAL   HUP
-
+//根据线程设置信号
 #if (NGX_LINUXTHREADS)
 #define NGX_REOPEN_SIGNAL        INFO
 #define NGX_CHANGEBIN_SIGNAL     XCPU
@@ -80,10 +81,10 @@ typedef intptr_t        ngx_int_t;
 typedef uintptr_t       ngx_uint_t;
 typedef intptr_t        ngx_flag_t;
 
-
+//所能表示数值的最大长度
 #define NGX_INT32_LEN   (sizeof("-2147483648") - 1)
 #define NGX_INT64_LEN   (sizeof("-9223372036854775808") - 1)
-
+//根据当前平台设置 INT的长度
 #if (NGX_PTR_SIZE == 4)
 #define NGX_INT_T_LEN   NGX_INT32_LEN
 #define NGX_MAX_INT_T_VALUE  2147483647
@@ -93,7 +94,7 @@ typedef intptr_t        ngx_flag_t;
 #define NGX_MAX_INT_T_VALUE  9223372036854775807
 #endif
 
-
+//内存对齐
 #ifndef NGX_ALIGNMENT
 #define NGX_ALIGNMENT   sizeof(unsigned long)    /* platform word */
 #endif
@@ -111,14 +112,16 @@ typedef intptr_t        ngx_flag_t;
 
 
 /* TODO: auto_conf: ngx_inline   inline __inline __inline__ */
+//此处应是 nginx用在函数前的宏定义
 #ifndef ngx_inline
 #define ngx_inline      inline
 #endif
 
+//全为1
 #ifndef INADDR_NONE  /* Solaris */
 #define INADDR_NONE  ((unsigned int) -1)
 #endif
-
+//检查 MAXHOSTNAMELEN
 #ifdef MAXHOSTNAMELEN
 #define NGX_MAXHOSTNAMELEN  MAXHOSTNAMELEN
 #else
