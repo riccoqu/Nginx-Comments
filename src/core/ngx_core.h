@@ -32,7 +32,7 @@ typedef struct ngx_thread_task_s  ngx_thread_task_t;
 typedef void (*ngx_event_handler_pt)(ngx_event_t *ev);
 typedef void (*ngx_connection_handler_pt)(ngx_connection_t *c);
 
-
+// Ngxin内返回状态的表示
 #define  NGX_OK          0
 #define  NGX_ERROR      -1
 #define  NGX_AGAIN      -2
@@ -41,7 +41,7 @@ typedef void (*ngx_connection_handler_pt)(ngx_connection_t *c);
 #define  NGX_DECLINED   -5
 #define  NGX_ABORT      -6
 
-
+// Core模块需要的文件
 #include <ngx_errno.h>
 #include <ngx_atomic.h>
 #include <ngx_thread.h>
@@ -68,6 +68,7 @@ typedef void (*ngx_connection_handler_pt)(ngx_connection_t *c);
 #include <ngx_crc.h>
 #include <ngx_crc32.h>
 #include <ngx_murmurhash.h>
+//开启了正则表达式
 #if (NGX_PCRE)
 #include <ngx_regex.h>
 #endif
@@ -79,6 +80,7 @@ typedef void (*ngx_connection_handler_pt)(ngx_connection_t *c);
 #include <ngx_inet.h>
 #include <ngx_cycle.h>
 #include <ngx_resolver.h>
+//开启了 OPENSSL
 #if (NGX_OPENSSL)
 #include <ngx_event_openssl.h>
 #endif
@@ -96,7 +98,7 @@ typedef void (*ngx_connection_handler_pt)(ngx_connection_t *c);
 #define CR     (u_char) '\r'
 #define CRLF   "\r\n"
 
-
+//工具函数
 #define ngx_abs(value)       (((value) >= 0) ? (value) : - (value))
 #define ngx_max(val1, val2)  ((val1 < val2) ? (val2) : (val1))
 #define ngx_min(val1, val2)  ((val1 > val2) ? (val2) : (val1))
