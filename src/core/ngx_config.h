@@ -117,7 +117,7 @@ typedef intptr_t        ngx_flag_t;
 #define ngx_inline      inline
 #endif
 
-//全为1
+//全为1 既 255.255.255.255,它是 Internet的有限广播地址
 #ifndef INADDR_NONE  /* Solaris */
 #define INADDR_NONE  ((unsigned int) -1)
 #endif
