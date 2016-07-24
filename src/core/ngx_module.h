@@ -17,7 +17,9 @@
 
 #define NGX_MODULE_UNSET_INDEX  (ngx_uint_t) -1
 
-
+/*
+ * 根据特性设置对应的宏定义
+ */
 #define NGX_MODULE_SIGNATURE_0                                                \
     ngx_value(NGX_PTR_SIZE) ","                                               \
     ngx_value(NGX_SIG_ATOMIC_T_SIZE) ","                                      \
@@ -212,6 +214,7 @@
 #define NGX_MODULE_SIGNATURE_33  "0"
 #endif
 
+//得到 Nginx支持的特性列表
 #define NGX_MODULE_SIGNATURE                                                  \
     NGX_MODULE_SIGNATURE_0 NGX_MODULE_SIGNATURE_1 NGX_MODULE_SIGNATURE_2      \
     NGX_MODULE_SIGNATURE_3 NGX_MODULE_SIGNATURE_4 NGX_MODULE_SIGNATURE_5      \
@@ -234,7 +237,7 @@
 #define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0
 
 /**
-  * Nginx 关于模块的接口，任何Nginx中需要包含的任何模块都需要实现一个此结构体
+  * Nginx 关于模块的接口，任何 Nginx中需要包含的任何模块都需要实现一个此结构体
   */
 struct ngx_module_s {
     ngx_uint_t            ctx_index;  ///< 在同类型模块中的索引(core、event、http、mail等)
@@ -247,10 +250,10 @@ struct ngx_module_s {
     ngx_uint_t            version;    ///< 模块的版本*/
     const char           *signature;
 
-	///模块上下文
+	  ///模块上下文
     void                 *ctx;      /**< 模块的上下文,因为不同的模块需要保存独有的结构，
-										 需要有不同的特性，
-										 例如 HTTP模块中指向ngx_http_module_t结构体*/
+										                     需要有不同的特性，
+										                     例如 HTTP模块中指向ngx_http_module_t结构体*/
     ngx_command_t        *commands; ///< 模块的指令集，解析配置文件时需要用到
     ngx_uint_t            type;     ///< 模块的类型
 
