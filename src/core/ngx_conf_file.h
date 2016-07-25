@@ -18,7 +18,7 @@
  *      FF      command flags
  *    TT        command type, i.e. HTTP "location" or "server" command
  */
-
+// Nginx关于配置项参数个数的宏定义
 #define NGX_CONF_NOARGS      0x00000001
 #define NGX_CONF_TAKE1       0x00000002
 #define NGX_CONF_TAKE2       0x00000004
@@ -63,6 +63,9 @@
 #define NGX_CONF_OK          NULL
 #define NGX_CONF_ERROR       (void *) -1
 
+/*
+ * 表示当前解析的上下文
+ */
 #define NGX_CONF_BLOCK_START 1
 #define NGX_CONF_BLOCK_DONE  2
 #define NGX_CONF_FILE_DONE   3
