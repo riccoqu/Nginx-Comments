@@ -265,13 +265,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-
+    //解析是否指定了配置文件,没有则使用默认配置
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-	//开始配置项的解析
+	  //开始配置项的解析
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -282,7 +282,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_log_stderr(0, "the configuration file %s syntax is ok",
                        cycle->conf_file.data);
     }
-
+    //如果核心模块实现了 init_conf()回调函数,则调用它
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;

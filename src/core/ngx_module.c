@@ -21,7 +21,9 @@ static ngx_uint_t ngx_module_ctx_index(ngx_cycle_t *cycle, ngx_uint_t type,
 ngx_uint_t         ngx_max_module;
 static ngx_uint_t  ngx_modules_n;
 
-
+/*
+ * 初始化 ngx_modules数组的 index和 name变量
+ */
 ngx_int_t
 ngx_preinit_modules(void)
 {
@@ -39,6 +41,9 @@ ngx_preinit_modules(void)
 }
 
 
+/*
+ * 初始化 cycle的 modules变量
+ */
 ngx_int_t
 ngx_cycle_modules(ngx_cycle_t *cycle)
 {
@@ -46,13 +51,13 @@ ngx_cycle_modules(ngx_cycle_t *cycle)
      * create a list of modules to be used for this cycle,
      * copy static modules to it
      */
-
+    // 初始化 cycle->modules变量,用来保存所有的模块,注意是二维数组
     cycle->modules = ngx_pcalloc(cycle->pool, (ngx_max_module + 1)
                                               * sizeof(ngx_module_t *));
     if (cycle->modules == NULL) {
         return NGX_ERROR;
     }
-
+    // 给 cycle->modules赋值
     ngx_memcpy(cycle->modules, ngx_modules,
                ngx_modules_n * sizeof(ngx_module_t *));
 
@@ -61,7 +66,9 @@ ngx_cycle_modules(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/*
+ * 此函数用于如果 ngx_module_t 实现了 init_module回调函数,则调用它
+ */
 ngx_int_t
 ngx_init_modules(ngx_cycle_t *cycle)
 {
