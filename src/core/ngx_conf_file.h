@@ -278,6 +278,9 @@ char *ngx_conf_check_num_bounds(ngx_conf_t *cf, void *post, void *data);
     }
 
 
+/*
+ *解析是否指定了配置参数，有就解析配置参数,没有则返回 NGX_CONF_OK并且使用默认的配置文件
+ */
 char *ngx_conf_param(ngx_conf_t *cf);
 
 /**

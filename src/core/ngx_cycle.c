@@ -184,7 +184,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_queue_init(&cycle->reusable_connections_queue);
 
-
+    // 给 cycle->conf_ctx开辟指针数组的位置,数组长度位 ngx_max_module
     cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
     if (cycle->conf_ctx == NULL) {
         ngx_destroy_pool(pool);
@@ -211,13 +211,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
-
+    //为 cycle->modules开辟空间,并且将 ngx_moduels数组赋值给它
     if (ngx_cycle_modules(cycle) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
     //调用所有核心模块的 create_conf方法创建配置项空间
+    //注意:这里的核心模块是指对应模块的 ngx_module_t.ctx指向 ngx_core_module_t的模块
     //并且将创建好的空间地址赋值到 cycle的 conf_ctx中
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
@@ -239,7 +240,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     senv = environ;
 
-
+    //初始化一个 ngx_conf_t
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
@@ -265,13 +266,16 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-    //解析是否指定了配置文件,没有则使用默认配置
+    /*
+     * 解析是否指定了配置参数，有就解析配置参数设置 cycle->conf_file,并且调用 ngx_conf_parse继续解析
+     * 没有则返回 NGX_CONF_OK并且使用默认的配置文件
+     */
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-	  //开始配置项的解析
+	  //根据 cycle->conf_file开始解析配置项
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
