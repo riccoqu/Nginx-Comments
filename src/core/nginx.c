@@ -10,12 +10,30 @@
 #include <nginx.h>
 
 
+/*
+ * 显示版本信息
+ */
 static void ngx_show_version_info(void);
+/*
+ * 继承 Sockets
+ */
 static ngx_int_t ngx_add_inherited_sockets(ngx_cycle_t *cycle);
+/*
+ * 解析启动时的参数
+ */
 static ngx_int_t ngx_get_options(int argc, char *const *argv);
+/*
+ * 将启动时的参数保存到 传入的 ngx_cycle_t 结构体中对应的位置
+ */
 static ngx_int_t ngx_process_options(ngx_cycle_t *cycle);
 static ngx_int_t ngx_save_argv(ngx_cycle_t *cycle, int argc, char *const *argv);
+/*
+ * Nginx核心模块创建配置项的回调函数,被设置到ngx_core_modult_t.create_conf指针
+ */
 static void *ngx_core_module_create_conf(ngx_cycle_t *cycle);
+/*
+ * 初始化配置空间的函数,例如配置文件中没有的配置项,会被设置为默认值
+ */
 static char *ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf);
 static char *ngx_set_user(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_set_env(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
@@ -148,7 +166,7 @@ static ngx_command_t  ngx_core_commands[] = {
 };
 
 /**
- *核心模块的上下文结构体
+ * 核心模块的上下文结构体
  */
 static ngx_core_module_t  ngx_core_module_ctx = {
     ngx_string("core"),
@@ -157,7 +175,7 @@ static ngx_core_module_t  ngx_core_module_ctx = {
 };
 
 /**
- *核心模块的的 ngx_mode_t 接口
+ * 核心模块的的 ngx_mode_t 接口
  */
 ngx_module_t  ngx_core_module = {
     NGX_MODULE_V1,
@@ -186,52 +204,52 @@ static char        *ngx_signal;
 
 static char **ngx_os_environ;
 
-
+// ngx_cdecl宏用于显式声明应使用的调用约定，在跨平台移植时有用，在linux版本的nginx程序中，该宏被定义为空
 int ngx_cdecl
 main(int argc, char *const *argv)
 {
     ngx_buf_t        *b;
-    ngx_log_t        *log;
+    ngx_log_t        *log;//保存日志结构
     ngx_uint_t        i;
-    ngx_cycle_t      *cycle, init_cycle;
+    ngx_cycle_t      *cycle, init_cycle;//初始化时的主要结构体,init_cycle先初始化.然后再初始化cycle.
     ngx_conf_dump_t  *cd;
-    ngx_core_conf_t  *ccf;
+    ngx_core_conf_t  *ccf;//保存配置上下文
 
     ngx_debug_init();
-
+    //用于初始化 Nginx自定义的错误输出
     if (ngx_strerror_init() != NGX_OK) {
         return 1;
     }
-
+    //获取程序启动时的参数并设置对应标志位.比如"-v"选项,ngx_show_version会被置为1
     if (ngx_get_options(argc, argv) != NGX_OK) {
         return 1;
     }
 
     if (ngx_show_version) {
         ngx_show_version_info();
-
+        //判断是否对Nginx配置文件进行语法检查
         if (!ngx_test_config) {
             return 0;
         }
     }
 
     /* TODO */ ngx_max_sockets = -1;
-
+    // Nginx环境时间初始化
     ngx_time_init();
 
-#if (NGX_PCRE)
+#if (NGX_PCRE)//判断是否支持正则表达式
     ngx_regex_init();
 #endif
 
-    ngx_pid = ngx_getpid();
-
+    ngx_pid = ngx_getpid();//获取当前进行 pid
+    //初始化日志部分
     log = ngx_log_init(ngx_prefix);
     if (log == NULL) {
         return 1;
     }
 
     /* STUB */
-#if (NGX_OPENSSL)
+#if (NGX_OPENSSL)//判断是否开启 OPENSSL,开启则进行初始化
     ngx_ssl_init(log);
 #endif
 
@@ -239,24 +257,24 @@ main(int argc, char *const *argv)
      * init_cycle->log is required for signal handlers and
      * ngx_process_options()
      */
-
+    //初始化 init_cycle
     ngx_memzero(&init_cycle, sizeof(ngx_cycle_t));
     init_cycle.log = log;
     ngx_cycle = &init_cycle;
-
+    //为 init_cycle初始化内存池，大小1024
     init_cycle.pool = ngx_create_pool(1024, log);
     if (init_cycle.pool == NULL) {
         return 1;
     }
-
+    //保存参数到全局变量中
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
-
+    //初始化 init_cycle中的一些字段
     if (ngx_process_options(&init_cycle) != NGX_OK) {
         return 1;
     }
-
+    //初始化系统相关的一些变量
     if (ngx_os_init(log) != NGX_OK) {
         return 1;
     }
@@ -264,19 +282,19 @@ main(int argc, char *const *argv)
     /*
      * ngx_crc32_table_init() requires ngx_cacheline_size set in ngx_os_init()
      */
-
+    //初始化CRC表
     if (ngx_crc32_table_init() != NGX_OK) {
         return 1;
     }
-
+    //添加继承而来的 sockets,放到 init_cycle->listening数组中,在服务器平滑升级时使用
     if (ngx_add_inherited_sockets(&init_cycle) != NGX_OK) {
         return 1;
     }
-
+    //先对模块进行一部分的初始化
     if (ngx_preinit_modules() != NGX_OK) {
         return 1;
     }
-
+    //对 init_cycle进行初始化,这个 ngx_init_cycle()很重要
     cycle = ngx_init_cycle(&init_cycle);
     if (cycle == NULL) {
         if (ngx_test_config) {
@@ -312,7 +330,8 @@ main(int argc, char *const *argv)
 
         return 0;
     }
-
+    //判断是否有信号处理
+    //有则进入 ngx_signal_process()进行处理
     if (ngx_signal) {
         return ngx_signal_process(cycle, ngx_signal);
     }
@@ -322,7 +341,7 @@ main(int argc, char *const *argv)
     ngx_cycle = cycle;
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-
+    //设置标志位
     if (ccf->master && ngx_process == NGX_PROCESS_SINGLE) {
         ngx_process = NGX_PROCESS_MASTER;
     }
@@ -337,7 +356,7 @@ main(int argc, char *const *argv)
         if (ngx_daemon(cycle->log) != NGX_OK) {
             return 1;
         }
-
+        //测试是否为 daemon模式
         ngx_daemonized = 1;
     }
 
@@ -346,7 +365,7 @@ main(int argc, char *const *argv)
     }
 
 #endif
-
+    //创建进程记录文件
     if (ngx_create_pidfile(&ccf->pid, cycle->log) != NGX_OK) {
         return 1;
     }
@@ -363,18 +382,22 @@ main(int argc, char *const *argv)
     }
 
     ngx_use_stderr = 0;
-
+    // 启动流程完毕,进入 process循环
     if (ngx_process == NGX_PROCESS_SINGLE) {
+        // Nginx的单进程 Single模式
         ngx_single_process_cycle(cycle);
 
     } else {
+        //多进程
         ngx_master_process_cycle(cycle);
     }
 
     return 0;
 }
 
-
+/*
+ * 继承 Sockets
+ */
 static void
 ngx_show_version_info(void)
 {
