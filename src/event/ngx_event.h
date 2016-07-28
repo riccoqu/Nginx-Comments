@@ -26,49 +26,57 @@ typedef struct {
 
 #endif
 
-
+/*
+ * Nginx中对于事件的定义
+ */
 struct ngx_event_s {
-    void            *data;
+    void            *data;///< 事件相关的对象,通常指向 ngx_connection_t连接对象
 
-    unsigned         write:1;
+    unsigned         write:1;///< 为1时表示事件是可写的
 
-    unsigned         accept:1;
+    unsigned         accept:1;///< 为1时表示此事件可以建立新的连接
 
     /* used to detect the stale events in kqueue and epoll */
-    unsigned         instance:1;
+    unsigned         instance:1;///< 用于区分当前事件是否时过期的
 
     /*
      * the event was passed or would be passed to a kernel;
      * in aio mode - operation was posted.
      */
-    unsigned         active:1;
+    unsigned         active:1;///< 为1时表示当前事件是活跃的
 
-    unsigned         disabled:1;
+    unsigned         disabled:1;///< 为1时表示禁用事件，对于 kqueue或 rtsig有效,对 epoll无效
 
     /* the ready event; in aio mode 0 means that no operation can be posted */
-    unsigned         ready:1;
+    unsigned         ready:1;///< 为1时表示当前事件已经准备就绪
 
-    unsigned         oneshot:1;
+    unsigned         oneshot:1;///< 对于 kqueue,eventport有意义,对 epoll无意义
 
     /* aio operation is complete */
-    unsigned         complete:1;
+    unsigned         complete:1;///< 标志用于异步 AIO事件的处理
 
-    unsigned         eof:1;
-    unsigned         error:1;
+    unsigned         eof:1;///< 为1时表示当前处理的字符流已经结束
+    unsigned         error:1;///< 为1时表示事件在处理过程中出现错误
 
-    unsigned         timedout:1;
-    unsigned         timer_set:1;
+    unsigned         timedout:1;///< 为1时表示这个事件已经超时
+    unsigned         timer_set:1;///< 为1时表示这个事件存在于定时器中
 
-    unsigned         delayed:1;
+    unsigned         delayed:1;///< 为1时表示需要延迟处理这个事件
 
-    unsigned         deferred_accept:1;
+    unsigned         deferred_accept:1;///< 为1时表示延迟建立连接
 
     /* the pending eof reported by kqueue, epoll or in aio chain operation */
-    unsigned         pending_eof:1;
+    unsigned         pending_eof:1;///< 为1时表示等待字符流结束
 
     unsigned         posted:1;
 
-    unsigned         closed:1;
+    unsigned         closed:1;///< 为1时表示当前事件已经关闭
+
+    /*
+     *  部分标志位都是根据不同的事件模块定义所需的标志位
+     *  因为主要是看 epoll的模型,所以下面 #define内的的各标志位可看对
+     *  应事件模块的文档
+     */
 
     /* to test on worker exit */
     unsigned         channel:1;
@@ -107,7 +115,13 @@ struct ngx_event_s {
     unsigned         available:1;
 #endif
 
-    ngx_event_handler_pt  handler;
+    /*
+     * 当前事件发生时的处理方法,每个事件消费模块都要重新实现
+     * 每一个事件最核心的方法就是 handler回调方法
+     * 原型:
+     *      typedef void (*ngx_event_handler_pt)(ngx_event_t *ev)
+     */
+    ngx_event_handler_pt  handler;///< 当前事件发生时的处理方法
 
 
 #if (NGX_HAVE_IOCP)
@@ -116,12 +130,12 @@ struct ngx_event_s {
 
     ngx_uint_t       index;
 
-    ngx_log_t       *log;
+    ngx_log_t       *log;///< 用于记录日志的对象
 
-    ngx_rbtree_node_t   timer;
+    ngx_rbtree_node_t   timer;///< 定时器节点
 
     /* the posted queue */
-    ngx_queue_t      queue;
+    ngx_queue_t      queue;///< 双向链表,关于 ngx_queue_t的用法看 core/ngx_quque.h
 
 #if 0
 
@@ -173,24 +187,29 @@ struct ngx_event_aio_s {
 
 #endif
 
-
+/*
+ * event模块对于事件处理的统一接口
+ */
 typedef struct {
-    ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-    ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+    ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);///< 添加事件
+    ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);///< 删除事件
 
-    ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-    ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+    ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);///< 启用事件
+    ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);///< 禁用事件
 
-    ngx_int_t  (*add_conn)(ngx_connection_t *c);
-    ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
+    ngx_int_t  (*add_conn)(ngx_connection_t *c);///< 添加一个新的链接
+    ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);///< 删除一个新的链接
 
-    ngx_int_t  (*notify)(ngx_event_handler_pt handler);
-
+    ngx_int_t  (*notify)(ngx_event_handler_pt handler);///< 事件的通知
+    /*
+     * 在正常的工作循环中,将通过调用 process_events方法处理事件
+     * 这个方法是处理、分发事件的核心
+     */
     ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
                                  ngx_uint_t flags);
 
-    ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);
-    void       (*done)(ngx_cycle_t *cycle);
+    ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);///< 初始化事件驱动模块的方法
+    void       (*done)(ngx_cycle_t *cycle);///< 退出事件驱动模块前调用的方法
 } ngx_event_actions_t;
 
 
@@ -452,14 +471,16 @@ typedef struct {
 #endif
 } ngx_event_conf_t;
 
-
+/*
+ * ngx_event_module的通用接口
+ */
 typedef struct {
-    ngx_str_t              *name;
+    ngx_str_t              *name;///< 事件模块的名称
 
-    void                 *(*create_conf)(ngx_cycle_t *cycle);
-    char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
+    void                 *(*create_conf)(ngx_cycle_t *cycle);///< 用于创建存储配置项参数的结构体
+    char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);///< 解析配置项完成后会被调用
 
-    ngx_event_actions_t     actions;
+    ngx_event_actions_t     actions;///< 对于事件驱动机制,每个事件模块需要实现的10个抽象方法
 } ngx_event_module_t;
 
 
@@ -509,9 +530,20 @@ void ngx_event_recvmsg(ngx_event_t *ev);
 ngx_int_t ngx_trylock_accept_mutex(ngx_cycle_t *cycle);
 u_char *ngx_accept_log_error(ngx_log_t *log, u_char *buf, size_t len);
 
-
+/*
+ * 事件处理中的核心方法
+ */
 void ngx_process_events_and_timers(ngx_cycle_t *cycle);
+/*
+ * 向事件模块中添加读事件的方法
+ * 也可以使用 ngx_event_actions_t接口提供的方法
+ */
 ngx_int_t ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags);
+/*
+ * 向事件模块中添加写事件的方法
+ * 也可以使用 ngx_event_actions_t接口提供的方法
+ * @param lowat 连接对应的套接字缓冲区中有 lowat大小的可用空间时才处理这个事件,为0表示不考虑大小
+ */
 ngx_int_t ngx_handle_write_event(ngx_event_t *wev, size_t lowat);
 
 
