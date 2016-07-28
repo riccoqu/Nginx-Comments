@@ -121,67 +121,93 @@ typedef enum {
 #define NGX_SSL_BUFFERED       0x01
 #define NGX_HTTP_V2_BUFFERED   0x02
 
-
+/*
+ * 使用 ngx_connection_t表示连接
+ */
 struct ngx_connection_s {
+    /*
+     * 连接未使用时, data成员用于充当连接池中空闲连接链表中的 next指针
+     * 当链接被使用时, data成员的意义由使用它的模块自定义
+     * 例如: HTTP模块中, data指向 ngx_http_request_t请求
+     */
     void               *data;
-    ngx_event_t        *read;
-    ngx_event_t        *write;
+    ngx_event_t        *read;///< 连接对应的读事件
+    ngx_event_t        *write;///< 连接对应的写事件
 
-    ngx_socket_t        fd;
+    ngx_socket_t        fd;///< Socket的文件描述符
 
-    ngx_recv_pt         recv;
-    ngx_send_pt         send;
-    ngx_recv_chain_pt   recv_chain;
-    ngx_send_chain_pt   send_chain;
+    /*
+     *   下面这四个回调方法都由不同的事件消费模块决定其行为
+     */
 
-    ngx_listening_t    *listening;
+    ngx_recv_pt         recv;///< 直接接收网络字节流的方法
+    ngx_send_pt         send;///< 直接发送网络字节流的方法
+    ngx_recv_chain_pt   recv_chain;///< ngx_chain_t为参数的接收网络字节流的方法
+    ngx_send_chain_pt   send_chain;///< ngx_chain_t为参数的发送网络字节流的方法
 
-    off_t               sent;
+    ngx_listening_t    *listening;///< 每个连接对应的 ngx_listening_t对象
 
-    ngx_log_t          *log;
+    off_t               sent;///< 当前连接上已经发送的字节数
 
-    ngx_pool_t         *pool;
+    ngx_log_t          *log;///< 可以记录日志的 ngx_lot_t对象
+
+    ngx_pool_t         *pool;///< 内存池
 
     int                 type;
 
-    struct sockaddr    *sockaddr;
-    socklen_t           socklen;
-    ngx_str_t           addr_text;
+    struct sockaddr    *sockaddr;///< 连接客户端的 sockaddr结构体
+    socklen_t           socklen;///< 结构体的长度
+    ngx_str_t           addr_text;///< 连接客户端字符串形式的 IP地址
 
-    ngx_str_t           proxy_protocol_addr;
+    ngx_str_t           proxy_protocol_addr;///<
     in_port_t           proxy_protocol_port;
 
 #if (NGX_SSL)
     ngx_ssl_connection_t  *ssl;
 #endif
 
-    struct sockaddr    *local_sockaddr;
-    socklen_t           local_socklen;
+    struct sockaddr    *local_sockaddr;///< 本机的监听端口对应的 sockaddr结构体
+    socklen_t           local_socklen;///< sockaddr结构体的大小
+    /*
+     * 用于接受客户端发来的字节流,缓冲区的大小由不同的事件模块自行分配
+     */
+    ngx_buf_t          *buffer;///< 缓冲区
+    /*
+     * 将当前连接串联为一个链表,添加到 ngx_cycle_t的
+     * reusable_connections_qyeye双向连表中,表示可以重用的连接
+     */
+    ngx_queue_t         queue;///< 关于 ngx_queue_t的用法见 core/ngx_queue.h
 
-    ngx_buf_t          *buffer;
+    ngx_atomic_uint_t   number;///< 连接使用次数,每次使用时都会 +1
 
-    ngx_queue_t         queue;
+    ngx_uint_t          requests;///< 处理的请求次数
 
-    ngx_atomic_uint_t   number;
+    /*
+     * 以下都为标志位
+     */
 
-    ngx_uint_t          requests;
-
-    unsigned            buffered:8;
+    unsigned            buffered:8;///< 缓存中的业务类型
 
     unsigned            log_error:3;     /* ngx_connection_log_error_e */
 
-    unsigned            timedout:1;
-    unsigned            error:1;
-    unsigned            destroyed:1;
+    unsigned            timedout:1;///< 为1时表示连接已超时
+    unsigned            error:1;///< 为1表示处理过程中出现错误
+    unsigned            destroyed:1;///< 为1时表示当前 TCP连接已经被销毁
 
-    unsigned            idle:1;
-    unsigned            reusable:1;
-    unsigned            close:1;
-    unsigned            shared:1;
+    unsigned            idle:1;///< 为1时表示连接处于空闲状态
+    unsigned            reusable:1;///< 为1时表示连接可重用
+    unsigned            close:1;///< 为1时表示连接关闭
+    unsigned            shared:1;///< 为1时表示当前连接共享的
 
-    unsigned            sendfile:1;
-    unsigned            sndlowat:1;
+    unsigned            sendfile:1;///< 为1时表示正在将文件中的数据发往连接的另一端
+    unsigned            sndlowat:1;///< 为1时表示缓冲区满足阈值时才会分发事件
+    /*
+     * 表示如何使用 TCP的 NoDelay特性
+     */
     unsigned            tcp_nodelay:2;   /* ngx_connection_tcp_nodelay_e */
+    /*
+     * 表示如何使用 TCP的 NoPush特性
+     */
     unsigned            tcp_nopush:2;    /* ngx_connection_tcp_nopush_e */
 
     unsigned            need_last_buf:1;
