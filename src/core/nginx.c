@@ -388,7 +388,10 @@ main(int argc, char *const *argv)
         ngx_single_process_cycle(cycle);
 
     } else {
-        //多进程
+        /* 多进程
+         * 这个函数根据不同的平台在 os/unix/ngx_process_cycle.c
+         * 和 os/win32/ngx_process_cycle.c中有不同的实现
+         */
         ngx_master_process_cycle(cycle);
     }
 
