@@ -122,7 +122,7 @@ typedef enum {
 #define NGX_HTTP_V2_BUFFERED   0x02
 
 /*
- * 使用 ngx_connection_t表示连接
+ * 使用 ngx_connection_t表示被动连接
  */
 struct ngx_connection_s {
     /*

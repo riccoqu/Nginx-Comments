@@ -37,7 +37,7 @@ struct ngx_shm_zone_s {
 /**
  * 关于ngx_cycle_s结构体可以参考:
  * @see http://blog.csdn.net/livelylittlefish/article/details/7247080
- * 
+ *
  * Ngxin的初始化围绕此结构体进行
  */
 struct ngx_cycle_s {
@@ -50,6 +50,9 @@ struct ngx_cycle_s {
     ngx_uint_t                log_use_stderr;  ///< unsigned  log_use_stderr:1;
 
     ngx_connection_t        **files;	///< 连接文件
+    /*
+     * 这里由 ngx_connection_t组成的链表中,由 ngx_connection_t.data指针保存下个节点的地址
+     */
     ngx_connection_t         *free_connections; ///< 空闲连接
     ngx_uint_t                free_connection_n;///< 空闲连接的个数
 
@@ -67,7 +70,10 @@ struct ngx_cycle_s {
 
     ngx_uint_t                connection_n;	///< 连接个数
     ngx_uint_t                files_n;		///< 打开文件个数
-
+    /*
+     *  ngx_cycle_t结构体中 connections数组、read_events数组和 write_events数组以
+     *  相同的数组序号进行连接,相同序号下这三个数组中的元素是配合使用的
+     */
     ngx_connection_t         *connections;	///< 链接
     ngx_event_t              *read_events;	///< 读事件
     ngx_event_t              *write_events;	///< 写事件
