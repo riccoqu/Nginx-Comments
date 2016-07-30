@@ -50,6 +50,9 @@ ngx_atomic_t         *ngx_connection_counter = &connection_counter;
 
 ngx_atomic_t         *ngx_accept_mutex_ptr;
 ngx_shmtx_t           ngx_accept_mutex;
+/*
+ * 事件模块中关于是否使用了负载均衡锁的标志位
+ */
 ngx_uint_t            ngx_use_accept_mutex;
 ngx_uint_t            ngx_accept_events;
 ngx_uint_t            ngx_accept_mutex_held;
@@ -915,7 +918,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     /* count the number of the event modules and set up their indices */
-
+    //给所有事件模块的 ctx_index初始化
     ngx_event_max_module = ngx_count_modules(cf->cycle, NGX_EVENT_MODULE);
 
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
@@ -929,7 +932,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     *(void **) conf = ctx;
-
+    //调用所有事件模块的 create_conf(),创建配置项结构体
     for (i = 0; cf->cycle->modules[i]; i++) {
         if (cf->cycle->modules[i]->type != NGX_EVENT_MODULE) {
             continue;
@@ -958,7 +961,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     if (rv != NGX_CONF_OK) {
         return rv;
     }
-
+    //调用所有事件模块的 init_conf(),初始化配置项结构体
     for (i = 0; cf->cycle->modules[i]; i++) {
         if (cf->cycle->modules[i]->type != NGX_EVENT_MODULE) {
             continue;

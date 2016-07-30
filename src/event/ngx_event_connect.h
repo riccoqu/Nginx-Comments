@@ -33,40 +33,43 @@ typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc,
     void *data);
 #endif
 
+/*
+ * ngx_peer_connection_s结构体表示主动连接,用在例如 upstream时会用到
+ */
 
 struct ngx_peer_connection_s {
-    ngx_connection_t                *connection;
+    ngx_connection_t                *connection;///< 因为需要重用,所以包含了 ngx_connection_t
 
-    struct sockaddr                 *sockaddr;
-    socklen_t                        socklen;
-    ngx_str_t                       *name;
+    struct sockaddr                 *sockaddr;///< 远端服务器的 socket地址
+    socklen_t                        socklen;///< sockaddr地址长度
+    ngx_str_t                       *name;///< 远端服务器名称
 
-    ngx_uint_t                       tries;
-    ngx_msec_t                       start_time;
+    ngx_uint_t                       tries;///< 连接出现失败时可以重试的次数
+    ngx_msec_t                       start_time;///< 连接开始的时间
 
-    ngx_event_get_peer_pt            get;
-    ngx_event_free_peer_pt           free;
-    void                            *data;
+    ngx_event_get_peer_pt            get;///< 获取连接的方法
+    ngx_event_free_peer_pt           free;///< 释放连接的方法
+    void                            *data;///< 用于与 get和 free配合传递参数
 
 #if (NGX_SSL)
-    ngx_event_set_peer_session_pt    set_session;
-    ngx_event_save_peer_session_pt   save_session;
+    ngx_event_set_peer_session_pt    set_session;///< SSL的 get方法
+    ngx_event_save_peer_session_pt   save_session;///< SSL的 free方法
 #endif
 
-    ngx_addr_t                      *local;
+    ngx_addr_t                      *local;///< 本机地址信息
 
-    int                              type;
-    int                              rcvbuf;
+    int                              type;///< 连接的类型
+    int                              rcvbuf;///< 套接字接收缓冲区的大小
 
-    ngx_log_t                       *log;
+    ngx_log_t                       *log;///< 记录日志的对象
 
-    unsigned                         cached:1;
+    unsigned                         cached:1;///< 为1时表示上面的 connection连接已缓存
 #if (NGX_HAVE_TRANSPARENT_PROXY)
     unsigned                         transparent:1;
 #endif
 
                                      /* ngx_connection_log_error_e */
-    unsigned                         log_error:2;
+    unsigned                         log_error:2;///< 错误的标志位
 };
 
 

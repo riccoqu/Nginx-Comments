@@ -175,7 +175,9 @@ static ngx_command_t  ngx_epoll_commands[] = {
       ngx_null_command
 };
 
-
+/*
+ * ngx_epoll_module实现了 ngx_event_actions_t定义的接口
+ */
 ngx_event_module_t  ngx_epoll_module_ctx = {
     &epoll_name,
     ngx_epoll_create_conf,               /* create configuration */
@@ -318,7 +320,11 @@ failed:
 
 #endif
 
-
+/*
+ * ngx_epoll_init()用于初始化 epoll模块,主要完成两个工作
+ * 1.epoll_create()的调用,创建 epollfd
+ * 2.创建 epoll_list数组,在使用 epoll_wait()时作为传入内核的参数
+ */
 static ngx_int_t
 ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
 {
