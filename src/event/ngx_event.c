@@ -56,7 +56,9 @@ ngx_shmtx_t           ngx_accept_mutex;
 ngx_uint_t            ngx_use_accept_mutex;
 ngx_uint_t            ngx_accept_events;
 ngx_uint_t            ngx_accept_mutex_held;
+//延迟抢 accept锁的时间
 ngx_msec_t            ngx_accept_mutex_delay;
+//这是连接的一个值 =当前连接数/8 - 空闲连接数
 ngx_int_t             ngx_accept_disabled;
 
 
@@ -192,7 +194,9 @@ ngx_module_t  ngx_event_core_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+/*
+ * 这是函数是事件循环中非常关键的一个函数，它会处理网络事件、定时器事件和两个队列
+ */
 void
 ngx_process_events_and_timers(ngx_cycle_t *cycle)
 {
@@ -200,12 +204,15 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_msec_t  timer, delta;
 
     if (ngx_timer_resolution) {
+        //当 timer_resolution配置项被设置时,表示希望事件精度为 ngx_timer_resolution毫秒
+        //所以此处讲 timer设置为-1
+        // flags为0
         timer = NGX_TIMER_INFINITE;
         flags = 0;
 
     } else {
         timer = ngx_event_find_timer();
-        flags = NGX_UPDATE_TIME;
+        flags = NGX_UPDATE_TIME;//告诉 ngx_process_change方法更新缓存的时间
 
 #if (NGX_WIN32)
 
@@ -219,16 +226,19 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
 
     if (ngx_use_accept_mutex) {
+        //使用了 accept锁
         if (ngx_accept_disabled > 0) {
+            //负载均衡阈值减1,并且主动放弃争抢 accept锁的机会
             ngx_accept_disabled--;
 
         } else {
+            //争抢 accept锁
             if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
                 return;
             }
 
             if (ngx_accept_mutex_held) {
-                flags |= NGX_POST_EVENTS;
+                flags |= NGX_POST_EVENTS;//加入标志位,表示收集到事件时加入到对应的队列中去
 
             } else {
                 if (timer == NGX_TIMER_INFINITE
@@ -239,26 +249,28 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
             }
         }
     }
-
+    //delta为了计算调用 ngx_process_events()方法消耗的时间
     delta = ngx_current_msec;
-
+    //进行事件处理
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
-
+    //处理队列中所有需要建立连接的事件
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
     if (ngx_accept_mutex_held) {
+    //如果依然获得 accept锁,释放它
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
 
     if (delta) {
+      //delta大于0,则有可能会有新的定时器触发
         ngx_event_expire_timers();
     }
-
+    //处理队列中的普通读、写事件
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 

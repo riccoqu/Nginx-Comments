@@ -68,7 +68,7 @@ struct ngx_event_s {
     /* the pending eof reported by kqueue, epoll or in aio chain operation */
     unsigned         pending_eof:1;///< 为1时表示等待字符流结束
 
-    unsigned         posted:1;
+    unsigned         posted:1;///< 为1时表示 post队列中
 
     unsigned         closed:1;///< 为1时表示当前事件已经关闭
 
@@ -128,7 +128,7 @@ struct ngx_event_s {
     ngx_event_ovlp_t ovlp;
 #endif
 
-    ngx_uint_t       index;
+    ngx_uint_t       index;///< 索引
 
     ngx_log_t       *log;///< 用于记录日志的对象
 
@@ -160,7 +160,7 @@ struct ngx_event_s {
 
 
 #if (NGX_HAVE_FILE_AIO)
-
+// 事件模块的异步处理定义
 struct ngx_event_aio_s {
     void                      *data;
     ngx_event_handler_pt       handler;
@@ -212,9 +212,9 @@ typedef struct {
     void       (*done)(ngx_cycle_t *cycle);///< 退出事件驱动模块前调用的方法
 } ngx_event_actions_t;
 
-
+//所有关于事件模块的操作可以通过这个全局变量来进行
 extern ngx_event_actions_t   ngx_event_actions;
-#if (NGX_HAVE_EPOLLRDHUP)
+#if (NGX_HAVE_EPOLLRDHUP)// NGX_HAVE_EPOLLRDHUB表示使用这个标志,监听对端是否关闭了连接
 extern ngx_uint_t            ngx_use_epoll_rdhup;
 #endif
 
@@ -426,7 +426,7 @@ extern ngx_uint_t            ngx_use_epoll_rdhup;
 #define NGX_CLEAR_EVENT    0    /* dummy declaration */
 #endif
 
-
+//通过定义的那个全局接口定义初函数接口
 #define ngx_process_events   ngx_event_actions.process_events
 #define ngx_done_events      ngx_event_actions.done
 
@@ -474,7 +474,7 @@ typedef struct {
 } ngx_event_conf_t;
 
 /*
- * ngx_event_module的通用接口
+ * Nginx事件模块的的通用接口
  */
 typedef struct {
     ngx_str_t              *name;///< 事件模块的名称
@@ -489,10 +489,14 @@ typedef struct {
 extern ngx_atomic_t          *ngx_connection_counter;
 
 extern ngx_atomic_t          *ngx_accept_mutex_ptr;
+//事件模块的连接互斥锁
 extern ngx_shmtx_t            ngx_accept_mutex;
+//是否使用 Accept锁的标志位
 extern ngx_uint_t             ngx_use_accept_mutex;
 extern ngx_uint_t             ngx_accept_events;
+//是否持有 Accept锁的标志位
 extern ngx_uint_t             ngx_accept_mutex_held;
+//Accept锁的延迟
 extern ngx_msec_t             ngx_accept_mutex_delay;
 extern ngx_int_t              ngx_accept_disabled;
 
@@ -519,17 +523,30 @@ extern ngx_uint_t             ngx_event_flags;
 extern ngx_module_t           ngx_events_module;
 extern ngx_module_t           ngx_event_core_module;
 
-
+/*
+ * 获取事件模块对应的配置项结构体
+ */
 #define ngx_event_get_conf(conf_ctx, module)                                  \
              (*(ngx_get_conf(conf_ctx, ngx_events_module))) [module.ctx_index];
 
 
-
+/*
+ * 获取新的链接
+ */
 void ngx_event_accept(ngx_event_t *ev);
 #if !(NGX_WIN32)
+/*
+ * recvmsg()函数封装,可参考 man recvmsg
+ */
 void ngx_event_recvmsg(ngx_event_t *ev);
 #endif
+/*
+ *  trylock Accept锁
+ */
 ngx_int_t ngx_trylock_accept_mutex(ngx_cycle_t *cycle);
+/*
+ * 记录错误日志
+ */
 u_char *ngx_accept_log_error(ngx_log_t *log, u_char *buf, size_t len);
 
 /*
