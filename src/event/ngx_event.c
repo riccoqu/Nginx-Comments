@@ -1039,6 +1039,7 @@ ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = cf->cycle->modules[m]->ctx;
         if (module->name->len == value[1].len) {
+          //循环,直到找到对应的事件模块,然后设置 ecf->use为该模块的索引
             if (ngx_strcmp(module->name->data, value[1].data) == 0) {
                 ecf->use = cf->cycle->modules[m]->ctx_index;
                 ecf->name = module->name->data;
