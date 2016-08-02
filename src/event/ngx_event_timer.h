@@ -18,10 +18,21 @@
 
 #define NGX_TIMER_LAZY_DELAY  300
 
-
+/*
+ * 初始化定时器容器
+ */
 ngx_int_t ngx_event_timer_init(ngx_log_t *log);
+/*
+ * 查找最快出发的定时器
+ */
 ngx_msec_t ngx_event_find_timer(void);
+/*
+ * 将容器内所有触发的定时器调用处理方法
+ */
 void ngx_event_expire_timers(void);
+/*
+ * 取消定时器
+ */
 void ngx_event_cancel_timers(void);
 
 //保存定时器的红黑树
@@ -71,18 +82,18 @@ ngx_event_add_timer(ngx_event_t *ev, ngx_msec_t timer)
                             ngx_event_ident(ev->data), ev->timer.key, key);
             return;
         }
-
+        //容器中当前定时器存在,删除它
         ngx_del_timer(ev);
     }
-
+    //设置事件的时间
     ev->timer.key = key;
 
     ngx_log_debug3(NGX_LOG_DEBUG_EVENT, ev->log, 0,
                    "event timer add: %d: %M:%M",
                     ngx_event_ident(ev->data), timer, ev->timer.key);
-
+    //插入事件
     ngx_rbtree_insert(&ngx_event_timer_rbtree, &ev->timer);
-
+    //修改标志位
     ev->timer_set = 1;
 }
 

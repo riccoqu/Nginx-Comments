@@ -9,8 +9,9 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 
-
+//全局的红黑树容器
 ngx_rbtree_t              ngx_event_timer_rbtree;
+//红黑树的哨兵节点
 static ngx_rbtree_node_t  ngx_event_timer_sentinel;
 
 /*
@@ -22,6 +23,7 @@ static ngx_rbtree_node_t  ngx_event_timer_sentinel;
 ngx_int_t
 ngx_event_timer_init(ngx_log_t *log)
 {
+    //初始化红黑树
     ngx_rbtree_init(&ngx_event_timer_rbtree, &ngx_event_timer_sentinel,
                     ngx_rbtree_insert_timer_value);
 
@@ -41,7 +43,7 @@ ngx_event_find_timer(void)
 
     root = ngx_event_timer_rbtree.root;
     sentinel = ngx_event_timer_rbtree.sentinel;
-
+    //找到最左的节点
     node = ngx_rbtree_min(root, sentinel);
 
     timer = (ngx_msec_int_t) (node->key - ngx_current_msec);
@@ -68,17 +70,17 @@ ngx_event_expire_timers(void)
         node = ngx_rbtree_min(root, sentinel);
 
         /* node->key > ngx_current_time */
-
+        //如果当前容器最快的定时器还没有达到事件的话,直接返回
         if ((ngx_msec_int_t) (node->key - ngx_current_msec) > 0) {
             return;
         }
-
+        //通过 offset宏获得指向当前定时器的 事件结构体
         ev = (ngx_event_t *) ((char *) node - offsetof(ngx_event_t, timer));
 
         ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
                        "event timer del: %d: %M",
                        ngx_event_ident(ev->data), ev->timer.key);
-
+        //删除定时器
         ngx_rbtree_delete(&ngx_event_timer_rbtree, &ev->timer);
 
 #if (NGX_DEBUG)
@@ -90,7 +92,7 @@ ngx_event_expire_timers(void)
         ev->timer_set = 0;
 
         ev->timedout = 1;
-
+        //调用事件的 handler方法
         ev->handler(ev);
     }
 }
