@@ -43,33 +43,35 @@ ngx_event_accept(ngx_event_t *ev)
 
         ev->timedout = 0;
     }
-
+    //获得事件核心模块的配置结构体 ngx_event.h:460
     ecf = ngx_event_get_conf(ngx_cycle->conf_ctx, ngx_event_core_module);
 
     if (!(ngx_event_flags & NGX_USE_KQUEUE_EVENT)) {
         ev->available = ecf->multi_accept;
     }
-
+    //事件模块中, 将 ngx_event_t的data变量当做 ngx_connection_t结构体
     lc = ev->data;
     ls = lc->listening;
     ev->ready = 0;
 
     ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
                    "accept on %V, ready: %d", &ls->addr_text, ev->available);
-
+    //do {]while(ev->available);
     do {
         socklen = sizeof(ngx_sockaddr_t);
 
 #if (NGX_HAVE_ACCEPT4)
+        //关于 accept()和 accept4()的区别参考 man accept4
         if (use_accept4) {
             s = accept4(lc->fd, &sa.sockaddr, &socklen, SOCK_NONBLOCK);
         } else {
             s = accept(lc->fd, &sa.sockaddr, &socklen);
         }
 #else
+        // accept获取新的连接
         s = accept(lc->fd, &sa.sockaddr, &socklen);
 #endif
-
+        //关于 accept()的出错处理
         if (s == (ngx_socket_t) -1) {
             err = ngx_socket_errno;
 
@@ -137,10 +139,10 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_accepted, 1);
 #endif
-
+        //更新 ngx_accept_disabled
         ngx_accept_disabled = ngx_cycle->connection_n / 8
                               - ngx_cycle->free_connection_n;
-
+        //从cycle_t中的 free_connections获取一个 ngx_connection_t对象,返回 ngx_connection_t*
         c = ngx_get_connection(s, ev->log);
 
         if (c == NULL) {
@@ -151,7 +153,7 @@ ngx_event_accept(ngx_event_t *ev)
 
             return;
         }
-
+        //设置 ngx_connection_t的类型
         c->type = SOCK_STREAM;
 
 #if (NGX_STAT_STUB)
@@ -192,6 +194,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         } else {
             if (!(ngx_event_flags & NGX_USE_IOCP_EVENT)) {
+               //设置非阻塞
                 if (ngx_nonblocking(s) == -1) {
                     ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_socket_errno,
                                   ngx_nonblocking_n " failed");
@@ -202,7 +205,7 @@ ngx_event_accept(ngx_event_t *ev)
         }
 
         *log = ls->log;
-
+        //设置接受和发送的方法 ngx_recv和 ngx_send是封装的io接口在 os/ngx_os.h中有定义
         c->recv = ngx_recv;
         c->send = ngx_send;
         c->recv_chain = ngx_recv_chain;
@@ -305,7 +308,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         log->data = NULL;
         log->handler = NULL;
-
+        //执行 ngx_listening_t的 handler方法
         ls->handler(c);
 
         if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
@@ -633,7 +636,9 @@ ngx_event_recvmsg(ngx_event_t *ev)
 
 #endif
 
-
+/*
+ * 尝试获取 Accept锁
+ */
 ngx_int_t
 ngx_trylock_accept_mutex(ngx_cycle_t *cycle)
 {
@@ -696,7 +701,9 @@ ngx_enable_accept_events(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/*
+ * 无法执行 accept时执行的操作
+ */
 static ngx_int_t
 ngx_disable_accept_events(ngx_cycle_t *cycle, ngx_uint_t all)
 {
@@ -736,7 +743,9 @@ ngx_disable_accept_events(ngx_cycle_t *cycle, ngx_uint_t all)
     return NGX_OK;
 }
 
-
+/*
+ * 关闭 accept连接
+ */
 static void
 ngx_close_accepted_connection(ngx_connection_t *c)
 {
@@ -761,7 +770,9 @@ ngx_close_accepted_connection(ngx_connection_t *c)
 #endif
 }
 
-
+/*
+ * accept日志错误
+ */
 u_char *
 ngx_accept_log_error(ngx_log_t *log, u_char *buf, size_t len)
 {
