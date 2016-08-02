@@ -34,7 +34,7 @@ ngx_event_find_timer(void)
 {
     ngx_msec_int_t      timer;
     ngx_rbtree_node_t  *node, *root, *sentinel;
-
+    //当树的根节点等于哨兵的情况,既没有树节点的情况
     if (ngx_event_timer_rbtree.root == &ngx_event_timer_sentinel) {
         return NGX_TIMER_INFINITE;
     }
@@ -49,7 +49,7 @@ ngx_event_find_timer(void)
     return (ngx_msec_t) (timer > 0 ? timer : 0);
 }
 
-
+//一次性调用树中所有到时的事件方法
 void
 ngx_event_expire_timers(void)
 {
