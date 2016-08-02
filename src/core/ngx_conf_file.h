@@ -108,7 +108,7 @@ struct ngx_open_file_s {
  */
 typedef struct {
     ngx_file_t            file;///< 文件的属性
-    ngx_buf_t            *buffer;///< 文件的内容
+    ngx_buf_t            *buffer;///< 文件的内容缓冲区
     ngx_buf_t            *dump;
     ngx_uint_t            line;///< 文件的行数
 } ngx_conf_file_t;

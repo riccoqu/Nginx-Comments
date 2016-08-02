@@ -123,11 +123,12 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 #endif
 
     if (filename) {
-
+        //如果指定了配置文件名,则打开该文件并进行解析
         /* open configuration file */
 
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
         if (fd == NGX_INVALID_FILE) {
+            //打开文件失败
             ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
                                ngx_open_file_n " \"%s\" failed",
                                filename->data);
@@ -202,6 +203,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         type = parse_block;
 
     } else {
+      //表示被 ngx_conf_param()函数调用,需要解析参数
         type = parse_param;
     }
 
@@ -344,15 +346,15 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
         }
 
         for ( /* void */ ; cmd->name.len; cmd++) {
-
+            //判断配置项的名字长度是否相等
             if (name->len != cmd->name.len) {
                 continue;
             }
-
+            //判断名字时候否相等
             if (ngx_strcmp(name->data, cmd->name.data) != 0) {
                 continue;
             }
-
+            //标志位,表示找到了配置项
             found = 1;
 
             if (cf->cycle->modules[i]->type != NGX_CONF_MODULE
@@ -430,7 +432,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                     conf = confp[cf->cycle->modules[i]->ctx_index];
                 }
             }
-
+            //这里就调用每个 ngx_commadn_t中的回调方法
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {
