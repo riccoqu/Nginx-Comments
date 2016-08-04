@@ -2960,17 +2960,17 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     }
 
     http_ctx = cf->ctx;
-    ctx->main_conf = http_ctx->main_conf;
+    ctx->main_conf = http_ctx->main_conf;//　main_conf指向上层的 main_conf
 
     /* the server{}'s srv_conf */
-
+    //给 ser_conf分配空间
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->srv_conf == NULL) {
         return NGX_CONF_ERROR;
     }
 
     /* the server{}'s loc_conf */
-
+    //给 loc_conf分配空间
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL) {
         return NGX_CONF_ERROR;
@@ -2982,7 +2982,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         }
 
         module = cf->cycle->modules[i]->ctx;
-
+        //调用每个 HTTP模块的　create_srv_conf回调函数
         if (module->create_srv_conf) {
             mconf = module->create_srv_conf(cf);
             if (mconf == NULL) {
@@ -2991,7 +2991,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
             ctx->srv_conf[cf->cycle->modules[i]->ctx_index] = mconf;
         }
-
+        //　create_loc_conf回调函数
         if (module->create_loc_conf) {
             mconf = module->create_loc_conf(cf);
             if (mconf == NULL) {
@@ -3010,7 +3010,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
-
+    //在　main_config中添加 server的配置结构体
     cscfp = ngx_array_push(&cmcf->servers);
     if (cscfp == NULL) {
         return NGX_CONF_ERROR;
@@ -3020,11 +3020,11 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     /* parse inside server{} */
-
+    //保存当前的指针,并设置 cf->ctx和 cf->cmd_type以便解析 server配置项里的内容
     pcf = *cf;
     cf->ctx = ctx;
     cf->cmd_type = NGX_HTTP_SRV_CONF;
-
+    //继续解析里面的 server配置项里的内容
     rv = ngx_conf_parse(cf, NULL);
 
     *cf = pcf;

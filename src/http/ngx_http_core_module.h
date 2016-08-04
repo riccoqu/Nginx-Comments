@@ -151,17 +151,28 @@ typedef struct {
 
 
 typedef struct {
-    ngx_array_t                servers;         /* ngx_http_core_srv_conf_t */
-
+    /**
+      * 存储所有的ngx_http_core_srv_conf_t，元素的个数等于server块的个数。
+      */
+    ngx_array_t                servers;
+    /**
+     * 包含所有 phase，以及注册的 phase handler，这些 handler在处理 http请求时，
+     * 会被依次调用，通过 ngx_http_phase_handler_t的next字段串联起来组成一个
+     * 链表。
+     */
     ngx_http_phase_engine_t    phase_engine;
-
+    /**
+     * 以 hash存储的所有request header
+     */
     ngx_hash_t                 headers_in_hash;
-
+    /**
+      * 保存变量的 hast表
+      */
     ngx_hash_t                 variables_hash;
-
+    //存放所有被索引的变量
     ngx_array_t                variables;       /* ngx_http_variable_t */
     ngx_uint_t                 ncaptures;
-
+    //最大数量
     ngx_uint_t                 server_names_hash_max_size;
     ngx_uint_t                 server_names_hash_bucket_size;
 
@@ -169,11 +180,13 @@ typedef struct {
     ngx_uint_t                 variables_hash_bucket_size;
 
     ngx_hash_keys_arrays_t    *variables_keys;
-
+    //监听的端口
     ngx_array_t               *ports;
 
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
-
+    /**
+      * 所有的phase的数组，其中每个元素是该phase上注册的handler的数组。
+      */  
     ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1];
 } ngx_http_core_main_conf_t;
 

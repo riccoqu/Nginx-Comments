@@ -19,7 +19,7 @@
 #define NGX_CMD_TERMINATE      4
 #define NGX_CMD_REOPEN         5
 
-
+// Nginx的5种运行模式
 #define NGX_PROCESS_SINGLE     0
 #define NGX_PROCESS_MASTER     1
 #define NGX_PROCESS_SIGNALLER  2

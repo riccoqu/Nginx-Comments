@@ -259,9 +259,9 @@ struct ngx_module_s {
 
     /**
       * 回调函数，按名称可知道调用的时间
-	  * 这些函数被Nginx的框架代码所调用,与本身的模块无关
-	  * 即使没有配置项,在函数不为空时也会被调用
-	  * 所以不使用时应该置为NULL
+	    * 这些函数被Nginx的框架代码所调用,与本身的模块无关
+	    * 即使没有配置项,在函数不为空时也会被调用
+	    * 所以不使用时应该置为NULL
       */
     ngx_int_t           (*init_master)(ngx_log_t *log);
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);

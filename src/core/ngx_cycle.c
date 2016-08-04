@@ -213,6 +213,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     //为 cycle->modules指针数组开辟空间,并且将 ngx_moduels数组赋值给它
     //注意:因为 ngx_modules.c中数组的声明都是以地址存放的,所以cycle中的 modules变量为二维数组,
+    //这里是给 cycle中的 modules指针开辟空间,并且讲 ngx_modules中拷贝进去
     if (ngx_cycle_modules(cycle) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
@@ -308,7 +309,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
             }
         }
     }
-
+    //用于发射信号,启用带参数 "-s"的情况
     if (ngx_process == NGX_PROCESS_SIGNALLER) {
         return cycle;
     }
@@ -348,7 +349,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         goto failed;
     }
 
-    //创建一些目录
+    //根据 cycle.paths创建一些目录
     if (ngx_create_paths(cycle, ccf->user) != NGX_OK) {
         goto failed;
     }
@@ -363,7 +364,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     part = &cycle->open_files.part;
     //file 是打开文件链表中的一个节点
     file = part->elts;
-
+    //打开所有的已经打开的文件
     for (i = 0; /* void */ ; i++) {
 
         if (i >= part->nelts) {
@@ -378,7 +379,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         if (file[i].name.len == 0) {
             continue;
         }
-
+        //打开文件
         file[i].fd = ngx_open_file(file[i].name.data,
                                    NGX_FILE_APPEND,
                                    NGX_FILE_CREATE_OR_OPEN,
@@ -396,6 +397,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
 
 #if !(NGX_WIN32)
+        //设置 FD_CLOEXEC标志位
         if (fcntl(file[i].fd, F_SETFD, FD_CLOEXEC) == -1) {
             ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
                           "fcntl(FD_CLOEXEC) \"%s\" failed",
@@ -410,7 +412,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* create shared memory */
-
+    //创建共享内存
     part = &cycle->shared_memory.part;
     shm_zone = part->elts;
 
@@ -482,7 +484,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
             break;
         }
-        //创建共享内存
+        //创建共享内存空间
         if (ngx_shm_alloc(&shm_zone[i].shm) != NGX_OK) {
             goto failed;
         }
@@ -502,7 +504,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* handle the listening sockets */
-
+    //处理监听 Socket
     if (old_cycle->listening.nelts) {
         ls = old_cycle->listening.elts;
         for (i = 0; i < old_cycle->listening.nelts; i++) {

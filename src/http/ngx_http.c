@@ -115,7 +115,9 @@ ngx_module_t  ngx_http_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+/*
+ * HTTP模块的初始化入口
+ */
 static char *
 ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -133,22 +135,22 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     /* the main http context */
-
+    //分配存储空间, ngx_http_conf_ctx_t就是包含 main_conf、srv_conf和 loc_conf指针的结构体
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;
     }
-
+    //这里注意,间接将传进来的 conf指针指向的地址赋值
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
     /* count the number of the http modules and set up their indices */
-
+    //统计模块数,并且设置对应的索引
     ngx_http_max_module = ngx_count_modules(cf->cycle, NGX_HTTP_MODULE);
 
 
     /* the http main_conf context, it is the same in the all http contexts */
-
+    //分配 main_conf内存
     ctx->main_conf = ngx_pcalloc(cf->pool,
                                  sizeof(void *) * ngx_http_max_module);
     if (ctx->main_conf == NULL) {
@@ -160,7 +162,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * the http null srv_conf context, it is used to merge
      * the server{}s' srv_conf's
      */
-
+    //分配 srv_conf内存
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->srv_conf == NULL) {
         return NGX_CONF_ERROR;
@@ -171,7 +173,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * the http null loc_conf context, it is used to merge
      * the server{}s' loc_conf's
      */
-
+    //分配 loc_conf内存
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL) {
         return NGX_CONF_ERROR;
@@ -190,21 +192,21 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = cf->cycle->modules[m]->ctx;
         mi = cf->cycle->modules[m]->ctx_index;
-
+        //调用所有HTTP模块的 create_main_conf回调方法
         if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
-
+        //调用所有HTTP模块的 create_srv_conf回调方法
         if (module->create_srv_conf) {
             ctx->srv_conf[mi] = module->create_srv_conf(cf);
             if (ctx->srv_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
-
+        //调用所有HTTP模块的 create_loc_conf回调方法
         if (module->create_loc_conf) {
             ctx->loc_conf[mi] = module->create_loc_conf(cf);
             if (ctx->loc_conf[mi] == NULL) {
@@ -212,8 +214,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             }
         }
     }
-
+    //保存 cf
     pcf = *cf;
+    //设置上下文结构体
     cf->ctx = ctx;
 
     for (m = 0; cf->cycle->modules[m]; m++) {
@@ -222,7 +225,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         module = cf->cycle->modules[m]->ctx;
-
+        //调用所有 HTTP模块的 preconfiguration函数
         if (module->preconfiguration) {
             if (module->preconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
@@ -264,7 +267,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
                 goto failed;
             }
         }
-
+        //合并 server级配置项
         rv = ngx_http_merge_servers(cf, cmcf, module, mi);
         if (rv != NGX_CONF_OK) {
             goto failed;
