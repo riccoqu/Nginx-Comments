@@ -322,7 +322,7 @@ done:
 }
 /**
  * 此函数用于完成 token到 Ngxin中变量的转换
- * 因为 Nginx中每个 ngx_conf_t变量对应一个 ngx_command_t变量,所以需要循环遍历所有的模块寻找
+ * 因为 Nginx中每个配置项对应一个 ngx_command_t变量,所以需要循环遍历所有的模块寻找
  * 能够匹配到的项
  */
 static ngx_int_t
@@ -432,7 +432,9 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                     conf = confp[cf->cycle->modules[i]->ctx_index];
                 }
             }
-            //这里就调用每个 ngx_commadn_t中的回调方法
+            //这里就调用每个 ngx_commadn_t中的回调方法, cf为 ngx_conf_t
+            // cmd为 ngx_command_t
+            // conf为指向对应模块的配置结构体指针的指针
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {
