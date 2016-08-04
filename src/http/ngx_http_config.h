@@ -13,11 +13,15 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-
+/*
+ *  这个接口体为　http模块配置的通用结构体
+ *  在解析每个块时都会创建一个出来
+ *  并且在解析完所有配置项后进行配置项的合并
+ */
 typedef struct {
-    void        **main_conf;
-    void        **srv_conf;
-    void        **loc_conf;
+    void        **main_conf;///<　 main级别配置项数组
+    void        **srv_conf;///<   server级别配置项数组
+    void        **loc_conf;///<   location级别配置项数组
 } ngx_http_conf_ctx_t;
 
 
