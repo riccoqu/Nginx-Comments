@@ -141,6 +141,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
     //这里注意,间接将传进来的 conf指针指向的地址赋值
+    //在调用这个函数时,传进来的 conf指针应该是　cycle.conf_ctx数组中指向对应 ngx_http_module模
+    //块结构体的指针的指针,所以这里的赋值等于给 ngx_http_module模块的配置项初始化
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
@@ -214,7 +216,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             }
         }
     }
-    //保存 cf
+    //保存当前的 ngx_conf_t
     pcf = *cf;
     //设置上下文结构体
     cf->ctx = ctx;
@@ -237,6 +239,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     cf->module_type = NGX_HTTP_MODULE;
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
+    //继续解析块内的配置
     rv = ngx_conf_parse(cf, NULL);
 
     if (rv != NGX_CONF_OK) {
@@ -260,14 +263,14 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         mi = cf->cycle->modules[m]->ctx_index;
 
         /* init http{} main_conf's */
-
+        //初始化 http{}块的 conf
         if (module->init_main_conf) {
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
             if (rv != NGX_CONF_OK) {
                 goto failed;
             }
         }
-        //合并 server级配置项
+        //合并 server级配置项,这个函数会也会合并loc配置项
         rv = ngx_http_merge_servers(cf, cmcf, module, mi);
         if (rv != NGX_CONF_OK) {
             goto failed;
@@ -276,7 +279,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* create location trees */
-
+    //所有静态的 location组织成树结构,便于根据 URL查找 location
     for (s = 0; s < cmcf->servers.nelts; s++) {
 
         clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
@@ -290,11 +293,12 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-
+    //初始化 ngx_http_core模块中 main_conf中定义的 数组,设置 handler
+    //自定义模块时,就是通过向 handler中添加回调函数实现自定义模块的介入
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
-
+    //将http请求的header初始化成hash结构
     if (ngx_http_init_headers_in_hash(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -322,10 +326,12 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * http{}'s cf->ctx was needed while the configuration merging
      * and in postconfiguration process
      */
-
+    //恢复 cf
     *cf = pcf;
 
-
+    //初始化 ngx_http_core模块 main_conf中的 phase_engine数组
+    //这个数组通过　ngx_http_phase_engine_t中的　next字段将整个请求的处理流程
+    //串成一个链表,这样在处理请求时只需要遍历链表即可
     if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }

@@ -3028,13 +3028,14 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     rv = ngx_conf_parse(cf, NULL);
 
     *cf = pcf;
-
+    //解析完参数,开始设置 Socket
     if (rv == NGX_CONF_OK && !cscf->listen) {
         ngx_memzero(&lsopt, sizeof(ngx_http_listen_opt_t));
 
         sin = &lsopt.sockaddr.sockaddr_in;
 
         sin->sin_family = AF_INET;
+        //端口默认设置为80
 #if (NGX_WIN32)
         sin->sin_port = htons(80);
 #else
@@ -3057,7 +3058,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
         (void) ngx_sock_ntop(&lsopt.sockaddr.sockaddr, lsopt.socklen,
                              lsopt.addr, NGX_SOCKADDR_STRLEN, 1);
-
+        //添加监听的 Socket
         if (ngx_http_add_listen(cf, cscf, &lsopt) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
