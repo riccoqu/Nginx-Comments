@@ -14,20 +14,22 @@
 
 
 typedef struct ngx_listening_s  ngx_listening_t;
-
+/*
+ * 监听 Socket结构体
+ */
 struct ngx_listening_s {
-    ngx_socket_t        fd;
+    ngx_socket_t        fd;///<　套接字句柄
 
-    struct sockaddr    *sockaddr;
-    socklen_t           socklen;    /* size of sockaddr */
-    size_t              addr_text_max_len;
-    ngx_str_t           addr_text;
+    struct sockaddr    *sockaddr;///<　套接字地址
+    socklen_t           socklen;///< size of sockaddr
+    size_t              addr_text_max_len;///<　存储 IP地址的最大长度
+    ngx_str_t           addr_text;///<　以字符串形式存储的 IP地址
 
-    int                 type;
+    int                 type;///< 套接字类型
 
-    int                 backlog;
-    int                 rcvbuf;
-    int                 sndbuf;
+    int                 backlog;///< 监听队列
+    int                 rcvbuf;///<　接收缓冲区大小
+    int                 sndbuf;///<　发送缓冲区大小
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
     int                 keepidle;
     int                 keepintvl;
@@ -35,24 +37,24 @@ struct ngx_listening_s {
 #endif
 
     /* handler of accepted connection */
-    ngx_connection_handler_pt   handler;///< Accept的处理方法
+    ngx_connection_handler_pt   handler;///< 处理方法
 
-    void               *servers;  /* array of ngx_http_in_addr_t, for example */
+    void               *servers;///< 保存当前监听端口对应的主机名,用作 HTTP使用时,指向 gx_http_in_addr_t
 
-    ngx_log_t           log;
+    ngx_log_t           log;///< 日志
     ngx_log_t          *logp;
 
-    size_t              pool_size;
+    size_t              pool_size;///<　新的　TCP连接指定的大小
     /* should be here because of the AcceptEx() preread */
     size_t              post_accept_buffer_size;
     /* should be here because of the deferred accept */
-    ngx_msec_t          post_accept_timeout;
+    ngx_msec_t          post_accept_timeout;///<　如果建立连接后 post_accept_timeout秒内没有接收到用户数据,则放弃该连接
 
-    ngx_listening_t    *previous;
-    ngx_connection_t   *connection;
+    ngx_listening_t    *previous;///< 用来组成链表的元素
+    ngx_connection_t   *connection;///< 保存连接数组
 
-    ngx_uint_t          worker;
-
+    ngx_uint_t          worker;///<　当前监听　Socket对应的进程索引
+    //一些标志位,比较好理解
     unsigned            open:1;
     unsigned            remain:1;
     unsigned            ignore:1;
@@ -235,8 +237,14 @@ struct ngx_connection_s {
 
 ngx_listening_t *ngx_create_listening(ngx_conf_t *cf, struct sockaddr *sockaddr,
     socklen_t socklen);
+/*
+ *　为每个进程克隆一个监听 Socket
+ */
 ngx_int_t ngx_clone_listening(ngx_conf_t *cf, ngx_listening_t *ls);
 ngx_int_t ngx_set_inherited_sockets(ngx_cycle_t *cycle);
+/*
+ *　这个函数用于打开所有 cycle->listening中的 Socket
+ */
 ngx_int_t ngx_open_listening_sockets(ngx_cycle_t *cycle);
 void ngx_configure_listening_sockets(ngx_cycle_t *cycle);
 void ngx_close_listening_sockets(ngx_cycle_t *cycle);

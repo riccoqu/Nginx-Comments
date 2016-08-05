@@ -15,7 +15,9 @@ ngx_os_io_t  ngx_io;
 
 static void ngx_drain_connections(void);
 
-
+/*
+ *　向 cycle->listening数组中添加一个 socket元素
+ */
 ngx_listening_t *
 ngx_create_listening(ngx_conf_t *cf, struct sockaddr *sockaddr,
     socklen_t socklen)
@@ -445,7 +447,7 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
 
                 continue;
             }
-
+            //创建一个新的 Socket
             s = ngx_socket(ls[i].sockaddr->sa_family, ls[i].type, 0);
 
             if (s == (ngx_socket_t) -1) {
@@ -453,7 +455,6 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
                               ngx_socket_n " %V failed", &ls[i].addr_text);
                 return NGX_ERROR;
             }
-
             if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
                            (const void *) &reuseaddr, sizeof(int))
                 == -1)
@@ -477,7 +478,7 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
                 int  reuseport;
 
                 reuseport = 1;
-
+                //设置 Socket属性
                 if (setsockopt(s, SOL_SOCKET, SO_REUSEPORT,
                                (const void *) &reuseport, sizeof(int))
                     == -1)
@@ -534,7 +535,7 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
 
             ngx_log_debug2(NGX_LOG_DEBUG_CORE, log, 0,
                            "bind() %V #%d ", &ls[i].addr_text, s);
-
+            //　Bind系统调用
             if (bind(s, ls[i].sockaddr, ls[i].socklen) == -1) {
                 err = ngx_socket_errno;
 
@@ -587,7 +588,7 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
                 ls[i].fd = s;
                 continue;
             }
-
+            // Listen系统调用
             if (listen(s, ls[i].backlog) == -1) {
                 err = ngx_socket_errno;
 
