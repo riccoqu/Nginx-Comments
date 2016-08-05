@@ -90,12 +90,12 @@ struct ngx_cycle_s {
 
 
 typedef struct {
-    ngx_flag_t                daemon;
+    ngx_flag_t                daemon;///< 为1时启用守护进程
     ngx_flag_t                master;
 
     ngx_msec_t                timer_resolution;
 
-    ngx_int_t                 worker_processes;
+    ngx_int_t                 worker_processes;///<　work进程数
     ngx_int_t                 debug_points;
 
     ngx_int_t                 rlimit_nofile;
@@ -107,14 +107,14 @@ typedef struct {
     ngx_uint_t                cpu_affinity_n;
     ngx_cpuset_t             *cpu_affinity;
 
-    char                     *username;
-    ngx_uid_t                 user;
-    ngx_gid_t                 group;
+    char                     *username;///<　运行时的用户名
+    ngx_uid_t                 user;///<　运行时的 uid
+    ngx_gid_t                 group;///<　运行时的 gid
 
-    ngx_str_t                 working_directory;
-    ngx_str_t                 lock_file;
+    ngx_str_t                 working_directory;///<　工作目录
+    ngx_str_t                 lock_file;///<　锁文件
 
-    ngx_str_t                 pid;
+    ngx_str_t                 pid;///<　pid的字符表示
     ngx_str_t                 oldpid;
 
     ngx_array_t               env;
