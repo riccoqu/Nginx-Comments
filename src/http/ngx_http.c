@@ -116,7 +116,7 @@ ngx_module_t  ngx_http_module = {
 };
 
 /*
- * HTTP模块的初始化入口
+ * HTTP核心模块的初始化入口,核心模块会依次初始化所有 HTTP模块
  */
 static char *
 ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
@@ -193,22 +193,22 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         module = cf->cycle->modules[m]->ctx;
-        mi = cf->cycle->modules[m]->ctx_index;
-        //调用所有HTTP模块的 create_main_conf回调方法
+        mi = cf->cycle->modules[m]->ctx_index;// mi为　HTTP模块内的索引
+        //调用所有HTTP模块的 create_main_conf回调方法,并将　ctx->main_conf赋值
         if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
-        //调用所有HTTP模块的 create_srv_conf回调方法
+        //调用所有HTTP模块的 create_srv_conf回调方法,并将　ctx->srv_conf赋值
         if (module->create_srv_conf) {
             ctx->srv_conf[mi] = module->create_srv_conf(cf);
             if (ctx->srv_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
-        //调用所有HTTP模块的 create_loc_conf回调方法
+        //调用所有HTTP模块的 create_loc_conf回调方法,并将　ctx->loc_conf赋值
         if (module->create_loc_conf) {
             ctx->loc_conf[mi] = module->create_loc_conf(cf);
             if (ctx->loc_conf[mi] == NULL) {
@@ -293,7 +293,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    //初始化 ngx_http_core模块中 main_conf中定义的 数组,设置 handler
+    //给 ngx_http_core模块中 main_conf中定义的数组分配空间
     //自定义模块时,就是通过向 handler中添加回调函数实现自定义模块的介入
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
@@ -338,7 +338,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* optimize the lists of ports, addresses and server names */
-
+    //根据之前已经解析好的信息,完成 ngx_listening_t的初始化
     if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -1157,7 +1157,7 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     ngx_http_core_main_conf_t  *cmcf;
 
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
-
+    //如果传入为空,则新创建一个数组
     if (cmcf->ports == NULL) {
         cmcf->ports = ngx_array_create(cf->temp_pool, 2,
                                        sizeof(ngx_http_conf_port_t));
@@ -1168,7 +1168,7 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
     sa = &lsopt->sockaddr.sockaddr;
     p = ngx_inet_get_port(sa);
-
+    //遍历查看 ports是否存在,存在就直接加入数组当中
     port = cmcf->ports->elts;
     for (i = 0; i < cmcf->ports->nelts; i++) {
 
@@ -1182,7 +1182,7 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     }
 
     /* add a port to the port list */
-
+    //不存在则给连表中添加
     port = ngx_array_push(cmcf->ports);
     if (port == NULL) {
         return NGX_ERROR;
@@ -1191,11 +1191,14 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     port->family = sa->sa_family;
     port->port = p;
     port->addrs.elts = NULL;
-
+    //循环调用
     return ngx_http_add_address(cf, cscf, port, lsopt);
 }
 
 
+/*
+ * 添加地址信息的函数
+ */
 static ngx_int_t
 ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
@@ -1417,7 +1420,7 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
                 }
             }
         }
-
+        //初始化监听队列，会添加监听 Socket
         if (ngx_http_init_listening(cf, &port[p]) != NGX_OK) {
             return NGX_ERROR;
         }
@@ -1663,7 +1666,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             i++;
             continue;
         }
-
+        //添加监听 Socket
         ls = ngx_http_add_listening(cf, &addr[i]);
         if (ls == NULL) {
             return NGX_ERROR;
@@ -1693,7 +1696,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             }
             break;
         }
-
+        //为每个进程克隆一个监听 Socket
         if (ngx_clone_listening(cf, ls) != NGX_OK) {
             return NGX_ERROR;
         }
@@ -1705,22 +1708,27 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
     return NGX_OK;
 }
 
-
+/*
+ *　向 cycle->listening添加一个新的监听 Socket
+ */
 static ngx_listening_t *
 ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
 {
     ngx_listening_t           *ls;
     ngx_http_core_loc_conf_t  *clcf;
     ngx_http_core_srv_conf_t  *cscf;
-
+    //这里向 cycle->listening添加了一个元素
     ls = ngx_create_listening(cf, &addr->opt.sockaddr.sockaddr,
                               addr->opt.socklen);
     if (ls == NULL) {
         return NULL;
     }
-
+    //返回了 cycle->listening数组中新元素的地址
+    //开始进行一些设置
     ls->addr_ntop = 1;
 
+    //!!! 设置 ngx_listening_t的handler为 ngx_http_init_connection
+    //这样当　监听 Socket上有读事件时,会调用 ngx_http_init_connection初始化新连接
     ls->handler = ngx_http_init_connection;
 
     cscf = addr->default_server;

@@ -3968,7 +3968,10 @@ ngx_http_core_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     return NGX_CONF_OK;
 }
 
-
+/*
+ * 解析　listen配置项的函数,保存　Socket的一些设置
+ * 函数最后会调用 ngx_http_add_listen添加 ListenSocket
+ */
 static char *
 ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -3988,7 +3991,7 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.url = value[1];
     u.listen = 1;
     u.default_port = 80;
-
+    //解析 url
     if (ngx_parse_url(cf->pool, &u) != NGX_OK) {
         if (u.err) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
@@ -4335,7 +4338,9 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_ERROR;
 }
 
-
+/*
+ * 用来解析出现 server_name配置项时的方法
+ */
 static char *
 ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -4366,7 +4371,7 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
                                &value[i]);
         }
 
-        sn = ngx_array_push(&cscf->server_names);
+        sn = ngx_array_push(&cscf->server_names);///< 向 srv级配置项里的 server_names数组添加元素
         if (sn == NULL) {
             return NGX_CONF_ERROR;
         }
@@ -4382,7 +4387,7 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         } else {
             sn->name = value[i];
         }
-
+        //如果前缀不是 ~,则不为正则表达式
         if (value[i].data[0] != '~') {
             ngx_strlow(sn->name.data, sn->name.data, sn->name.len);
             continue;

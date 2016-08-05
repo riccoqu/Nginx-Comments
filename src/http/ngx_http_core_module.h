@@ -186,7 +186,7 @@ typedef struct {
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
     /**
       * 所有的phase的数组，其中每个元素是该phase上注册的handler的数组。
-      */  
+      */
     ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1];
 } ngx_http_core_main_conf_t;
 
@@ -279,18 +279,20 @@ typedef struct {
     ngx_uint_t                 naddrs;
 } ngx_http_port_t;
 
-
+/**
+  *　监听端口配置信息,一个端口可以对应多个 IP地址,所有保存有 ngx_http_conf_addr_t数组
+  */
 typedef struct {
     ngx_int_t                  family;
     in_port_t                  port;
-    ngx_array_t                addrs;     /* array of ngx_http_conf_addr_t */
+    ngx_array_t                addrs;///< 保存 ngx_http_conf_addr_t的数组
 } ngx_http_conf_port_t;
 
 
 typedef struct {
-    ngx_http_listen_opt_t      opt;
+    ngx_http_listen_opt_t      opt;///< 监听　Socket的选项
 
-    ngx_hash_t                 hash;
+    ngx_hash_t                 hash;///< 保存了以server name为key，ngx_http_core_srv_conf_t为value的哈希表
     ngx_hash_wildcard_t       *wc_head;
     ngx_hash_wildcard_t       *wc_tail;
 
@@ -299,9 +301,11 @@ typedef struct {
     ngx_http_server_name_t    *regex;
 #endif
 
-    /* the default server configuration for this address:port */
-    ngx_http_core_srv_conf_t  *default_server;
-    ngx_array_t                servers;  /* array of ngx_http_core_srv_conf_t */
+    /**
+      * the default server configuration for this address:port
+      */
+    ngx_http_core_srv_conf_t  *default_server;///<　默认的 src级配置
+    ngx_array_t                servers;///< array of ngx_http_core_srv_conf_t
 } ngx_http_conf_addr_t;
 
 
