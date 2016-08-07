@@ -531,7 +531,7 @@ extern ngx_module_t           ngx_event_core_module;
 
 
 /*
- * 获取新的链接
+ * 获取新的链接,在 ngx_event_accept.c文件中定义
  */
 void ngx_event_accept(ngx_event_t *ev);
 #if !(NGX_WIN32)

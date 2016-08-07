@@ -18,7 +18,9 @@ static void ngx_debug_accepted_connection(ngx_event_conf_t *ecf,
     ngx_connection_t *c);
 #endif
 
-
+/**
+  *　根据事件 ev获取新的连接
+  */
 void
 ngx_event_accept(ngx_event_t *ev)
 {
@@ -35,7 +37,7 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_HAVE_ACCEPT4)
     static ngx_uint_t  use_accept4 = 1;
 #endif
-
+    //判断是否超时
     if (ev->timedout) {
         if (ngx_enable_accept_events((ngx_cycle_t *) ngx_cycle) != NGX_OK) {
             return;
@@ -45,7 +47,7 @@ ngx_event_accept(ngx_event_t *ev)
     }
     //获得事件核心模块的配置结构体 ngx_event.h:460
     ecf = ngx_event_get_conf(ngx_cycle->conf_ctx, ngx_event_core_module);
-
+    //没有使用　KQUEUE的情况
     if (!(ngx_event_flags & NGX_USE_KQUEUE_EVENT)) {
         ev->available = ecf->multi_accept;
     }
@@ -159,13 +161,13 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_active, 1);
 #endif
-
+        //创建内存池
         c->pool = ngx_create_pool(ls->pool_size, ev->log);
         if (c->pool == NULL) {
             ngx_close_accepted_connection(c);
             return;
         }
-
+        //创建 sockaddr结构体
         c->sockaddr = ngx_palloc(c->pool, socklen);
         if (c->sockaddr == NULL) {
             ngx_close_accepted_connection(c);
@@ -173,7 +175,7 @@ ngx_event_accept(ngx_event_t *ev)
         }
 
         ngx_memcpy(c->sockaddr, &sa, socklen);
-
+        //创建日志文件
         log = ngx_palloc(c->pool, sizeof(ngx_log_t));
         if (log == NULL) {
             ngx_close_accepted_connection(c);
@@ -181,7 +183,7 @@ ngx_event_accept(ngx_event_t *ev)
         }
 
         /* set a blocking mode for iocp and non-blocking mode for others */
-
+        //iocp为设置为 blocking
         if (ngx_inherited_nonblocking) {
             if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
                 if (ngx_blocking(s) == -1) {
@@ -193,6 +195,7 @@ ngx_event_accept(ngx_event_t *ev)
             }
 
         } else {
+            //非 iocp设置为 nonblocking
             if (!(ngx_event_flags & NGX_USE_IOCP_EVENT)) {
                //设置非阻塞
                 if (ngx_nonblocking(s) == -1) {
@@ -233,7 +236,7 @@ ngx_event_accept(ngx_event_t *ev)
         rev = c->read;
         wev = c->write;
 
-        wev->ready = 1;
+        wev->ready = 1;//设置写事件的 ready位,表示事件已经准备好可以被触发
 
         if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
             rev->ready = 1;
@@ -257,13 +260,13 @@ ngx_event_accept(ngx_event_t *ev)
          *           - ngx_atomic_fetch_add()
          *             or protection by critical section or light mutex
          */
-
+        //number表示该连接的序号
         c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
 
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_handled, 1);
 #endif
-
+        //关于地址的设置
         if (ls->addr_ntop) {
             c->addr_text.data = ngx_pnalloc(c->pool, ls->addr_text_max_len);
             if (c->addr_text.data == NULL) {
@@ -298,7 +301,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         }
 #endif
-
+        //调用　ngx_add_conn将新的事件加入事件循环
         if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
             if (ngx_add_conn(c) == NGX_ERROR) {
                 ngx_close_accepted_connection(c);
@@ -308,7 +311,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         log->data = NULL;
         log->handler = NULL;
-        //执行 ngx_listening_t的 handler方法
+        //执行 ngx_listening_t的 handler方法，在 HTTP模块中被设置为 ngx_http_init_connection()
         ls->handler(c);
 
         if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
