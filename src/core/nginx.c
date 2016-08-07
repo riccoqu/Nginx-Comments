@@ -192,14 +192,14 @@ ngx_module_t  ngx_core_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+//一些本文件内的变量
 static ngx_uint_t   ngx_show_help;
 static ngx_uint_t   ngx_show_version;
 static ngx_uint_t   ngx_show_configure;
 static u_char      *ngx_prefix;
 static u_char      *ngx_conf_file;
 static u_char      *ngx_conf_params;
-static char        *ngx_signal;
+static char        *ngx_signal;//代表要发送的信号
 
 
 static char **ngx_os_environ;

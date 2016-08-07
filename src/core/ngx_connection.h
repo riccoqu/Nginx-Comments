@@ -130,7 +130,7 @@ struct ngx_connection_s {
     /*
      * 连接未使用时, data成员用于充当连接池中空闲连接链表中的 next指针
      * 当链接被使用时, data成员的意义由使用它的模块自定义
-     * 例如: HTTP模块中, data指向 ngx_http_request_t请求
+     * 例如: HTTP模块中, data指向 ngx_http_request_t
      */
     void               *data;
     ngx_event_t        *read;///< 连接对应的读事件
@@ -180,7 +180,7 @@ struct ngx_connection_s {
      */
     ngx_queue_t         queue;///< 关于 ngx_queue_t的用法见 core/ngx_queue.h
 
-    ngx_atomic_uint_t   number;///< 连接使用次数,每次使用时都会 +1
+    ngx_atomic_uint_t   number;///< 表示该连接的序号
 
     ngx_uint_t          requests;///< 处理的请求次数
 

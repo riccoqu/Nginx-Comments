@@ -243,7 +243,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
                                    "unexpected end of file, expecting \"}\"");
                 goto failed;
             }
-
+            //文件解析完成
             goto done;
         }
 
