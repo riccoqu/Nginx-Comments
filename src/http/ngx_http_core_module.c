@@ -792,7 +792,9 @@ ngx_http_handler(ngx_http_request_t *r)
     ngx_http_core_main_conf_t  *cmcf;
 
     r->connection->log->action = NULL;
-
+    /**
+     　* 初始化r->phase_handler
+    　 */
     if (!r->internal) {
         switch (r->headers_in.connection_type) {
         case 0:
@@ -810,7 +812,7 @@ ngx_http_handler(ngx_http_request_t *r)
 
         r->lingering_close = (r->headers_in.content_length_n > 0
                               || r->headers_in.chunked);
-        r->phase_handler = 0;
+        r->phase_handler = 0;//phase_handler实际为phase_handler在headers数组中的下标
 
     } else {
         cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
@@ -836,18 +838,20 @@ ngx_http_core_run_phases(ngx_http_request_t *r)
     ngx_http_phase_handler_t   *ph;
     ngx_http_core_main_conf_t  *cmcf;
 
+    //先获得 ngx_http_core_module的配置结构体
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
 
-    ph = cmcf->phase_engine.handlers;
+    ph = cmcf->phase_engine.handlers;//所有注册在 phase_engine下的handlers
 
     while (ph[r->phase_handler].checker) {
-
+        //调用所有 phase_handler的 checker函数，r->phase_handler会在函数内更新
         rc = ph[r->phase_handler].checker(r, &ph[r->phase_handler]);
 
         if (rc == NGX_OK) {
             return;
         }
     }
+    //当所有阶段都跑完后,这个请求处理完毕
 }
 
 

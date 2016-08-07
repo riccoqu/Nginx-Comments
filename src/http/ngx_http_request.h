@@ -298,6 +298,9 @@ typedef struct {
 
 typedef struct ngx_http_addr_conf_s  ngx_http_addr_conf_t;
 
+/*
+ * HTTP模块中关于连接的结构体
+ */
 typedef struct {
     ngx_http_addr_conf_t             *addr_conf;
     ngx_http_conf_ctx_t              *conf_ctx;
@@ -385,7 +388,7 @@ struct ngx_http_request_s {
                                          /* of ngx_http_upstream_state_t */
 
     ngx_pool_t                       *pool;
-    ngx_buf_t                        *header_in;
+    ngx_buf_t                        *header_in;///< 保存HTTP头部的 buf
 
     ngx_http_headers_in_t             headers_in;
     ngx_http_headers_out_t            headers_out;
@@ -562,7 +565,7 @@ struct ngx_http_request_s {
      * a memory that can be reused after parsing a request line
      * via ngx_http_ephemeral_t
      */
-
+    //用于标示这些字段在　header_in缓冲区中的位置
     u_char                           *uri_start;
     u_char                           *uri_end;
     u_char                           *uri_ext;

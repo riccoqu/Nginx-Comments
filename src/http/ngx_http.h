@@ -84,14 +84,17 @@ ngx_int_t ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
 ngx_int_t ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     ngx_http_listen_opt_t *lsopt);
 
-
+/**
+  * 这个函数主要用于 HTTP模块在 ngx_listening_t结构体中的 handler字段,当新的连接到达并且已经初始化好
+  * ngx_connection_t结构体时,交给　HTTP模块处理
+  */
 void ngx_http_init_connection(ngx_connection_t *c);
 void ngx_http_close_connection(ngx_connection_t *c);
 
 #if (NGX_HTTP_SSL && defined SSL_CTRL_SET_TLSEXT_HOSTNAME)
 int ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg);
 #endif
-
+//用于解析　HTTP请求头的函数,在 ngx_http_parse.c中实现
 ngx_int_t ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b);
 ngx_int_t ngx_http_parse_uri(ngx_http_request_t *r);
 ngx_int_t ngx_http_parse_complex_uri(ngx_http_request_t *r,

@@ -494,7 +494,9 @@ struct ngx_http_location_tree_node_s {
     u_char                           name[1];
 };
 
-
+/*
+ *　这个函数很重要,会将所有阶段注册的 handler跑一遍
+ */
 void ngx_http_core_run_phases(ngx_http_request_t *r);
 ngx_int_t ngx_http_core_generic_phase(ngx_http_request_t *r,
     ngx_http_phase_handler_t *ph);
