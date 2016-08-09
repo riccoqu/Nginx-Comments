@@ -8,7 +8,9 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+/*
+ *　用来创建守护进程的函数
+ */
 ngx_int_t
 ngx_daemon(ngx_log_t *log)
 {

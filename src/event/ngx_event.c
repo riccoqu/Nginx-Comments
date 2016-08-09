@@ -274,7 +274,9 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 
-//处理读事件的方法
+/*
+ *　向事件模块中提供添加读事件的方法
+ */
 ngx_int_t
 ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 {
@@ -342,7 +344,9 @@ ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
     return NGX_OK;
 }
 
-
+/*
+ *　向事件模块中添加写事件的方法
+ */
 ngx_int_t
 ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 {
@@ -421,7 +425,9 @@ ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
     return NGX_OK;
 }
 
-
+/*
+ * 遇到 events配置项时调用的方法,可以看到只是做一个判断
+ */
 static char *
 ngx_event_init_conf(ngx_cycle_t *cycle, void *conf)
 {
@@ -455,7 +461,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     }
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-
+    //设置定时器的分辨率
     ngx_timer_resolution = ccf->timer_resolution;
 
 #if !(NGX_WIN32)
@@ -567,6 +573,9 @@ ngx_event_module_init(ngx_cycle_t *cycle)
 
 #if !(NGX_WIN32)
 
+/*
+ *　设置 SIGALRM信号的回调函数
+ */
 static void
 ngx_timer_signal_handler(int signo)
 {
@@ -833,7 +842,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #else
-
+        //设置读事件的回调函数
         rev->handler = (c->type == SOCK_STREAM) ? ngx_event_accept
                                                 : ngx_event_recvmsg;
 
@@ -881,6 +890,10 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 }
 
 
+/*
+ * 设置低水位值
+ */
+
 ngx_int_t
 ngx_send_lowat(ngx_connection_t *c, size_t lowat)
 {
@@ -915,7 +928,9 @@ ngx_send_lowat(ngx_connection_t *c, size_t lowat)
     return NGX_OK;
 }
 
-
+/*
+ *　遇到 events关键字时调用的函数,由 Nginx框架调用
+ */
 static char *
 ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {

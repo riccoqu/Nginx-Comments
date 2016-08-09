@@ -347,7 +347,7 @@ main(int argc, char *const *argv)
     }
 
 #if !(NGX_WIN32)
-
+    //这里初始化所有的信号处理函数,定义在 /src/os/unix/ngx_process.c
     if (ngx_init_signals(cycle->log) != NGX_OK) {
         return 1;
     }

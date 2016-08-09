@@ -33,11 +33,13 @@ typedef struct {
     ngx_msec_t                 delay;
 } ngx_cache_manager_ctx_t;
 
+/*
+ * 这两个函数在 main函数的最后被调用,进入master的循环
+ */
+void ngx_master_process_cycle(ngx_cycle_t *cycle);///< master-worker模式
+void ngx_single_process_cycle(ngx_cycle_t *cycle);///<　单进程模式
 
-void ngx_master_process_cycle(ngx_cycle_t *cycle);
-void ngx_single_process_cycle(ngx_cycle_t *cycle);
-
-
+//在循环中用到的标志位
 extern ngx_uint_t      ngx_process;
 extern ngx_uint_t      ngx_worker;
 extern ngx_pid_t       ngx_pid;

@@ -83,7 +83,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     ngx_msec_t         delay;
     ngx_listening_t   *ls;
     ngx_core_conf_t   *ccf;
-
+    //设置新号集
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
     sigaddset(&set, SIGALRM);
@@ -95,12 +95,12 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     sigaddset(&set, ngx_signal_value(NGX_TERMINATE_SIGNAL));
     sigaddset(&set, ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
     sigaddset(&set, ngx_signal_value(NGX_CHANGEBIN_SIGNAL));
-
+    //改变进程的当前阻塞信号集,这样当程序从 sigsuspend()返回时会阻塞上面的这些信号
     if (sigprocmask(SIG_BLOCK, &set, NULL) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                       "sigprocmask() failed");
     }
-
+    //将信号集置空
     sigemptyset(&set);
 
 
@@ -126,16 +126,17 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-
+    //根据 worker_processes设置的进程数打开 worker进程
     ngx_start_worker_processes(cycle, ccf->worker_processes,
                                NGX_PROCESS_RESPAWN);
+    //启动缓存管理
     ngx_start_cache_manager_processes(cycle, 0);
-
+    //初始化一些标志位
     ngx_new_binary = 0;
     delay = 0;
     sigio = 0;
     live = 1;
-
+    //进入 master循环
     for ( ;; ) {
         if (delay) {
             if (ngx_sigalrm) {
@@ -159,14 +160,15 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
         }
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "sigsuspend");
-
+        // master进程阻塞在 sigsuspend()函数上，处理信号
+        // 在调用 sigsuspend()时 set为空,所以会接收所有的信号,而在函数返回后进程的阻塞信号集会恢复
         sigsuspend(&set);
 
         ngx_time_update();
 
         ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "wake up, sigio %i", sigio);
-
+        //判断一些列的标志位
         if (ngx_reap) {
             ngx_reap = 0;
             ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "reap children");
@@ -283,7 +285,9 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     }
 }
 
-
+/*
+ *　单进程模式,实现较为简单
+ */
 void
 ngx_single_process_cycle(ngx_cycle_t *cycle)
 {
@@ -318,11 +322,11 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
 
             ngx_master_process_exit(cycle);
         }
-
+        //重新读取配置
         if (ngx_reconfigure) {
             ngx_reconfigure = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
-
+            //获得新的 cycle
             cycle = ngx_init_cycle(cycle);
             if (cycle == NULL) {
                 cycle = (ngx_cycle_t *) ngx_cycle;
@@ -361,7 +365,7 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
         ch.pid = ngx_processes[ngx_process_slot].pid;
         ch.slot = ngx_process_slot;
         ch.fd = ngx_processes[ngx_process_slot].channel[0];
-
+        //传递 Socker描述符
         ngx_pass_open_channel(cycle, &ch);
     }
 }
@@ -722,7 +726,9 @@ ngx_master_process_exit(ngx_cycle_t *cycle)
     exit(0);
 }
 
-
+/*
+ * worker进程的执行函数
+ */
 static void
 ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 {

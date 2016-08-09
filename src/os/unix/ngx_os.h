@@ -42,6 +42,7 @@ void ngx_os_specific_status(ngx_log_t *log);
  * create a daemon processs
  */
 ngx_int_t ngx_daemon(ngx_log_t *log);
+//向 pid的进程发送 sig对应名字的信号
 ngx_int_t ngx_os_signal_process(ngx_cycle_t *cycle, char *sig, ngx_pid_t pid);
 
 
