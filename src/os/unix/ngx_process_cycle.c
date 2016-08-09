@@ -271,6 +271,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
         }
 
         if (ngx_change_binary) {
+            //启动新的二进制程序,调用 ngx_exec_new_binary()方法
             ngx_change_binary = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "changing binary");
             ngx_new_binary = ngx_exec_new_binary(cycle, ngx_argv);

@@ -261,7 +261,9 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     return pid;
 }
 
-
+/*
+ *　调用下面的那个函数执行新的二进制程序
+ */
 ngx_pid_t
 ngx_execute(ngx_cycle_t *cycle, ngx_exec_ctx_t *ctx)
 {
@@ -269,7 +271,9 @@ ngx_execute(ngx_cycle_t *cycle, ngx_exec_ctx_t *ctx)
                              NGX_PROCESS_DETACHED);
 }
 
-
+/*
+ *　执行新的程序
+ */
 static void
 ngx_execute_proc(ngx_cycle_t *cycle, void *data)
 {
@@ -312,7 +316,9 @@ ngx_init_signals(ngx_log_t *log)
     return NGX_OK;
 }
 
-
+/*
+ * 信号的处理函数，会根据不同的信号设置对应的标志位
+ */
 void
 ngx_signal_handler(int signo)
 {
@@ -455,7 +461,7 @@ ngx_signal_handler(int signo)
     ngx_set_errno(err);
 }
 
-
+//获得进程的退出状态
 static void
 ngx_process_get_status(void)
 {

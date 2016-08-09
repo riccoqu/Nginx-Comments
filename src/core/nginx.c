@@ -620,7 +620,9 @@ tz_found:
     return env;
 }
 
-
+/*
+ * 执行新的二进制程序, ngx_execute()的定义在 /src/os/unix/ngx_process.c
+ */
 ngx_pid_t
 ngx_exec_new_binary(ngx_cycle_t *cycle, char *const *argv)
 {
@@ -701,7 +703,7 @@ ngx_exec_new_binary(ngx_cycle_t *cycle, char *const *argv)
 
         return NGX_INVALID_PID;
     }
-
+    //这里开始执行新的二进制程序
     pid = ngx_execute(cycle, &ctx);
 
     if (pid == NGX_INVALID_PID) {
