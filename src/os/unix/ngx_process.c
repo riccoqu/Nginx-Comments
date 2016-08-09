@@ -10,7 +10,9 @@
 #include <ngx_event.h>
 #include <ngx_channel.h>
 
-
+/*
+ *　关于信号的结构体,用于实现 signals数组
+ */
 typedef struct {
     int     signo;
     char   *signame;
@@ -92,7 +94,11 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     u_long     on;
     ngx_pid_t  pid;
     ngx_int_t  s;
-    // s为索引，如果传递进来的类型大于0,则就是已经确定这个进程已经退出
+    /*
+     * 当 respawn >= 0时,respawn对应进程在 ngx_processes数组中的下标
+     * 当 respawn < 0时,respawn表示进程的类型，类型在 ngx_process.h:52 被定义
+     * s表示进程在 ngx_processes数组中的下标
+     */
     if (respawn >= 0) {
         s = respawn;
 
@@ -116,7 +122,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     if (respawn != NGX_PROCESS_DETACHED) {
 
         /* Solaris 9 still has no AF_LOCAL */
-
+        //创建一对 Socket
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1)
         {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -254,7 +260,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         break;
     }
 
-    if (s == ngx_last_process) {
+    if (s == ) {
         ngx_last_process++;
     }
 

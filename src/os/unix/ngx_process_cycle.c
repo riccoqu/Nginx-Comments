@@ -181,6 +181,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
         }
 
         if (ngx_terminate) {
+            //强制关闭,向所有 worker进程发送　SIGKILL信号
             if (delay == 0) {
                 delay = 50;
             }
@@ -220,9 +221,11 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
         }
 
         if (ngx_reconfigure) {
+          　//重新读取配置文件
             ngx_reconfigure = 0;
 
             if (ngx_new_binary) {
+                //重新创建 worker进程
                 ngx_start_worker_processes(cycle, ccf->worker_processes,
                                            NGX_PROCESS_RESPAWN);
                 ngx_start_cache_manager_processes(cycle, 0);
@@ -232,7 +235,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             }
 
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
-
+            //创建新的 cycle
             cycle = ngx_init_cycle(cycle);
             if (cycle == NULL) {
                 cycle = (ngx_cycle_t *) ngx_cycle;
@@ -362,7 +365,13 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 
         ngx_spawn_process(cycle, ngx_worker_process_cycle,
                           (void *) (intptr_t) i, "worker process", type);
-
+        /**
+          * 创建 worker进程,然后给 ngx_processes数组对应的元素设置信息
+          * ngx_process_slot是在 ngx_process.c中的全局变量,这个变量
+          * 在 ngx_spawn_process()函数中的 fork()出新进程前被赋值为新
+          * 进程在 ngx_processes数组中的下标,所以下面在设置新进程的信息,
+          * 并且调用 ngx_pass_open_channel()传递描述符
+          */
         ch.pid = ngx_processes[ngx_process_slot].pid;
         ch.slot = ngx_process_slot;
         ch.fd = ngx_processes[ngx_process_slot].channel[0];
@@ -434,7 +443,7 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
     ngx_int_t  i;
 
     for (i = 0; i < ngx_last_process; i++) {
-
+        //当前元素为空
         if (i == ngx_process_slot
             || ngx_processes[i].pid == -1
             || ngx_processes[i].channel[0] == -1)
@@ -449,7 +458,7 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
                       ngx_processes[i].channel[0]);
 
         /* TODO: NGX_AGAIN */
-
+        //向管道中写入描述符的信息,定义在 ngx_channel.c
         ngx_write_channel(ngx_processes[i].channel[0],
                           ch, sizeof(ngx_channel_t), cycle->log);
     }
@@ -737,13 +746,13 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     ngx_process = NGX_PROCESS_WORKER;
     ngx_worker = worker;
-
+    //初始化关于本 worker进程
     ngx_worker_process_init(cycle, worker);
 
     ngx_setproctitle("worker process");
 
     for ( ;; ) {
-
+        //进入 worker进程循环
         if (ngx_exiting) {
             ngx_event_cancel_timers();
 
@@ -756,7 +765,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
         }
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
-
+        //进行事件循环
         ngx_process_events_and_timers(cycle);
 
         if (ngx_terminate) {
@@ -786,7 +795,9 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
     }
 }
 
-
+/**
+  * 用于 worker进程的初始化
+  */
 static void
 ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
 {
@@ -939,7 +950,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
 #if 0
     ngx_last_process = 0;
 #endif
-
+    //添加关于 channel的回调方法
     if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT,
                               ngx_channel_handler)
         == NGX_ERROR)
@@ -1010,7 +1021,10 @@ ngx_worker_process_exit(ngx_cycle_t *cycle)
     exit(0);
 }
 
-
+/**
+  * 这是关于 channel事件的处理方法,它在 ngx_worker_process_init()初始化函数中通过调用
+  * ngx_add_channel_event()方法注册进事件模块中
+  */
 static void
 ngx_channel_handler(ngx_event_t *ev)
 {
@@ -1028,7 +1042,7 @@ ngx_channel_handler(ngx_event_t *ev)
     ngx_log_debug0(NGX_LOG_DEBUG_CORE, ev->log, 0, "channel handler");
 
     for ( ;; ) {
-
+        //获取传递过来的 channel，存放到 ch指向的 ngx_channel_t中，内部使用了 recvmsg()函数
         n = ngx_read_channel(c->fd, &ch, sizeof(ngx_channel_t), ev->log);
 
         ngx_log_debug1(NGX_LOG_DEBUG_CORE, ev->log, 0, "channel: %i", n);
@@ -1075,7 +1089,7 @@ ngx_channel_handler(ngx_event_t *ev)
             ngx_log_debug3(NGX_LOG_DEBUG_CORE, ev->log, 0,
                            "get channel s:%i pid:%P fd:%d",
                            ch.slot, ch.pid, ch.fd);
-
+            //设置对应 ngx_processes数组中的进程信息,和传递过来的描述符
             ngx_processes[ch.slot].pid = ch.pid;
             ngx_processes[ch.slot].channel[0] = ch.fd;
             break;

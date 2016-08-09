@@ -75,7 +75,7 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
     msg.msg_namelen = 0;
     msg.msg_iov = iov;
     msg.msg_iovlen = 1;
-
+    //利用 sendmsg()传递描述符
     n = sendmsg(s, &msg, 0);
 
     if (n == -1) {
@@ -124,7 +124,9 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
     msg.msg_accrights = (caddr_t) &fd;
     msg.msg_accrightslen = sizeof(int);
 #endif
-
+    /**
+      * 利用 recvmsg()读入描述符
+      */
     n = recvmsg(s, &msg, 0);
 
     if (n == -1) {
@@ -168,7 +170,7 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
         }
 
         /* ch->fd = *(int *) CMSG_DATA(&cmsg.cm); */
-
+        //给 ch->fd赋值
         ngx_memcpy(&ch->fd, CMSG_DATA(&cmsg.cm), sizeof(int));
     }
 
@@ -230,6 +232,7 @@ ngx_add_channel_event(ngx_cycle_t *cycle, ngx_fd_t fd, ngx_int_t event,
         }
 
     } else {
+        //添加对应的事件
         if (ngx_add_event(ev, event, 0) == NGX_ERROR) {
             ngx_free_connection(c);
             return NGX_ERROR;
