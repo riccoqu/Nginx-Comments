@@ -251,7 +251,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
     //delta为了计算调用 ngx_process_events()方法消耗的时间
     delta = ngx_current_msec;
-    //进行事件处理
+    //进行事件处理,将对应的事件添加到队列中
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
@@ -588,7 +588,7 @@ ngx_timer_signal_handler(int signo)
 
 #endif
 
-
+//初始化事件进程函数
 static ngx_int_t
 ngx_event_process_init(ngx_cycle_t *cycle)
 {
@@ -629,18 +629,18 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
     }
-
+    //循环查找到当前使用的事件模块
     for (m = 0; cycle->modules[m]; m++) {
         if (cycle->modules[m]->type != NGX_EVENT_MODULE) {
             continue;
         }
-
+        // use是使用模块的下标
         if (cycle->modules[m]->ctx_index != ecf->use) {
             continue;
         }
 
         module = cycle->modules[m]->ctx;
-
+        //这里调用 actions.init()初始化的事件模块的接口
         if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
             /* fatal */
             exit(2);
@@ -712,7 +712,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
     c = cycle->connections;
-
+    //为读事件分配空间
     cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                    cycle->log);
     if (cycle->read_events == NULL) {
@@ -724,7 +724,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         rev[i].closed = 1;
         rev[i].instance = 1;
     }
-
+    //为写事件分配空间
     cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                     cycle->log);
     if (cycle->write_events == NULL) {
@@ -738,7 +738,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     i = cycle->connection_n;
     next = NULL;
-
+    //初始化事件队列,主要设置 next指针
     do {
         i--;
 
@@ -749,7 +749,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
         next = &c[i];
     } while (i);
-
+    //初始化 free_connections连接队列完成
     cycle->free_connections = next;
     cycle->free_connection_n = cycle->connection_n;
 
@@ -763,7 +763,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             continue;
         }
 #endif
-
+        //　获得listening队列元素连接
         c = ngx_get_connection(ls[i].fd, cycle->log);
 
         if (c == NULL) {
@@ -842,7 +842,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #else
-        //设置读事件的回调函数
+        //设置读事件的回调函数,根据不同的 AF_INET对应不同的函数
         rev->handler = (c->type == SOCK_STREAM) ? ngx_event_accept
                                                 : ngx_event_recvmsg;
 
@@ -877,7 +877,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #endif
-
+        //将读事件加入到事件循环中
         if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }
