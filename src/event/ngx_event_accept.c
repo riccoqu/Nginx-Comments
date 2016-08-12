@@ -301,7 +301,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         }
 #endif
-        //调用　ngx_add_conn将新的事件加入事件循环
+        //调用　ngx_add_conn将新的连接加入事件循环
         if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
             if (ngx_add_conn(c) == NGX_ERROR) {
                 ngx_close_accepted_connection(c);
