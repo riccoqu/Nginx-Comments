@@ -434,7 +434,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             }
             //这里就调用每个 ngx_commadn_t中的回调方法, cf为 ngx_conf_t
             // cmd为 ngx_command_t
-            // conf为指向对应模块的配置结构体指针的指针
+            // conf为保存指向对应模块的配置结构体指针的指针
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {

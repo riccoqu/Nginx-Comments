@@ -141,8 +141,10 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
     //这里注意,间接将传进来的 conf指针指向的地址赋值
-    //在调用这个函数时,传进来的 conf指针应该是　cycle.conf_ctx数组中指向对应 ngx_http_module模
-    //块结构体的指针的指针,所以这里的赋值等于给 ngx_http_module模块的配置项初始化
+    //因为 当前模块为 NGX_MAIN_CONF,所以传入的 conf值为指针的地址
+    //在调用这个函数时,传进来的 conf指针应该是　cycle.conf_ctx数组中指向
+    //对应 ngx_http_module模块结构体的指针的地址,所以这里的赋值等于给
+    // ngx_http_module模块的配置项初始化
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
@@ -194,7 +196,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = cf->cycle->modules[m]->ctx;
         mi = cf->cycle->modules[m]->ctx_index;// mi为　HTTP模块内的索引
-        //调用所有HTTP模块的 create_main_conf回调方法,并将　ctx->main_conf赋值
+        //调用所有HTTP模块的 create_main_conf回调方法,填充当前模块对应 ctx的指针
         if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
@@ -239,7 +241,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     cf->module_type = NGX_HTTP_MODULE;
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
-    //继续解析块内的配置
+    //继续解析 http{}内的配置
     rv = ngx_conf_parse(cf, NULL);
 
     if (rv != NGX_CONF_OK) {
@@ -250,7 +252,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * init http{} main_conf's, merge the server{}s' srv_conf's
      * and its location{}s' loc_conf's
      */
-
+    //cmcf指向 http_core_module的配置结构体
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
     cscfp = cmcf->servers.elts;
 
@@ -263,7 +265,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         mi = cf->cycle->modules[m]->ctx_index;
 
         /* init http{} main_conf's */
-        //初始化 http{}块的 conf
+        //调用所有模块的 init_main_conf函数初始化 http{}块的 conf
         if (module->init_main_conf) {
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
             if (rv != NGX_CONF_OK) {
@@ -565,7 +567,9 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     return NGX_OK;
 }
 
-
+/**
+  * 合并 server配置项的函数
+  */
 static char *
 ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
     ngx_http_module_t *module, ngx_uint_t ctx_index)
@@ -586,7 +590,7 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
         /* merge the server{}s' srv_conf's */
 
         ctx->srv_conf = cscfp[s]->ctx->srv_conf;
-
+        //调用每个模块的 merge_srv_conf函数合并 server配置项
         if (module->merge_srv_conf) {
             rv = module->merge_srv_conf(cf, saved.srv_conf[ctx_index],
                                         cscfp[s]->ctx->srv_conf[ctx_index]);
@@ -594,7 +598,7 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
                 goto failed;
             }
         }
-
+        //调用每个模块的 merge_loc_conf函数合并 location配置项
         if (module->merge_loc_conf) {
 
             /* merge the server{}'s loc_conf */

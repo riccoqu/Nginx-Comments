@@ -105,7 +105,9 @@ typedef struct {
     u_char                     addr[NGX_SOCKADDR_STRLEN + 1];
 } ngx_http_listen_opt_t;
 
-
+/**
+  *　HTTP模块定义的11个阶段
+  */
 typedef enum {
     NGX_HTTP_POST_READ_PHASE = 0,
 
@@ -137,16 +139,20 @@ struct ngx_http_phase_handler_s {
     ngx_uint_t                 next;
 };
 
-
+/**
+  * 保存handler的结构
+  */
 typedef struct {
     ngx_http_phase_handler_t  *handlers;
     ngx_uint_t                 server_rewrite_index;
     ngx_uint_t                 location_rewrite_index;
 } ngx_http_phase_engine_t;
 
-
+/**
+  * 保存不同阶段handlers的结构
+  */
 typedef struct {
-    ngx_array_t                handlers;
+    ngx_array_t                handlers;///< 数组
 } ngx_http_phase_t;
 
 
@@ -166,7 +172,7 @@ typedef struct {
      */
     ngx_hash_t                 headers_in_hash;
     /**
-      * 保存变量的 hast表
+      * 保存变量的 hash表
       */
     ngx_hash_t                 variables_hash;
     //存放所有被索引的变量
@@ -326,7 +332,9 @@ typedef struct {
     unsigned                   test_dir:1;
 } ngx_http_try_file_t;
 
-
+/**
+  *　location块的配置结构体,保存有路由树
+  */
 struct ngx_http_core_loc_conf_s {
     ngx_str_t     name;          /* location name */
 
@@ -348,7 +356,7 @@ struct ngx_http_core_loc_conf_s {
     unsigned      gzip_disable_degradation:2;
 #endif
 #endif
-
+    //静态路由树
     ngx_http_location_tree_node_t   *static_locations;
 #if (NGX_PCRE)
     ngx_http_core_loc_conf_t       **regex_locations;
@@ -480,7 +488,9 @@ typedef struct {
     ngx_queue_t                      list;
 } ngx_http_location_queue_t;
 
-
+/**
+  * 路由树的节点
+  */
 struct ngx_http_location_tree_node_s {
     ngx_http_location_tree_node_t   *left;
     ngx_http_location_tree_node_t   *right;
@@ -494,9 +504,9 @@ struct ngx_http_location_tree_node_s {
     u_char                           name[1];
 };
 
-/*
- *　这个函数很重要,会将所有阶段注册的 handler跑一遍
- */
+/**
+  *　这个函数很重要,会将所有阶段注册的 handler跑一遍
+  */
 void ngx_http_core_run_phases(ngx_http_request_t *r);
 ngx_int_t ngx_http_core_generic_phase(ngx_http_request_t *r,
     ngx_http_phase_handler_t *ph);
