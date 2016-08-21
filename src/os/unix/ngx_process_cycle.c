@@ -464,7 +464,9 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
     }
 }
 
-
+/**
+  * 给 worker进程发送信号的函数
+  */
 static void
 ngx_signal_worker_processes(ngx_cycle_t *cycle, int signo)
 {
@@ -504,7 +506,7 @@ ngx_signal_worker_processes(ngx_cycle_t *cycle, int signo)
 
 
     for (i = 0; i < ngx_last_process; i++) {
-
+       //记录进程的状态
         ngx_log_debug7(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "child: %i %P e:%d t:%d d:%d r:%d j:%d",
                        i,
@@ -545,7 +547,7 @@ ngx_signal_worker_processes(ngx_cycle_t *cycle, int signo)
 
         ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0,
                        "kill (%P, %d)", ngx_processes[i].pid, signo);
-
+        //向进程发送信号
         if (kill(ngx_processes[i].pid, signo) == -1) {
             err = ngx_errno;
             ngx_log_error(NGX_LOG_ALERT, cycle->log, err,
@@ -693,7 +695,9 @@ ngx_reap_children(ngx_cycle_t *cycle)
     return live;
 }
 
-
+/**
+  * 用于在 master进程退出时执行的函数
+  */
 static void
 ngx_master_process_exit(ngx_cycle_t *cycle)
 {
