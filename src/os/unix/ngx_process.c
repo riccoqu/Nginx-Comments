@@ -93,7 +93,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 {
     u_long     on;
     ngx_pid_t  pid;
-    ngx_int_t  s;
+    ngx_int_t  s;///< 索引
     /*
      * 当 respawn >= 0时,respawn对应进程在 ngx_processes数组中的下标
      * 当 respawn < 0时,respawn表示进程的类型，类型在 ngx_process.h:52 被定义
@@ -119,6 +119,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     }
 
     //如果类型为NGX_PROCESS_DETACHED，则说明是热代码替换,因此不需要新建socketpair
+    //否则为新建
     if (respawn != NGX_PROCESS_DETACHED) {
 
         /* Solaris 9 still has no AF_LOCAL */
@@ -260,7 +261,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         break;
     }
 
-    if (s == ) {
+    if (s == ngx_last_process) {
         ngx_last_process++;
     }
 

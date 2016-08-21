@@ -46,7 +46,7 @@ typedef struct {
     char *const  *envp;
 } ngx_exec_ctx_t;
 
-
+// Nginx最大进程数
 #define NGX_MAX_PROCESSES         1024
 
 #define NGX_PROCESS_NORESPAWN     -1
