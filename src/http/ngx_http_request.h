@@ -170,7 +170,9 @@ typedef struct {
     ngx_uint_t                        offset;
 } ngx_http_header_out_t;
 
-
+/**
+  * HTTP请求 header
+  */
 typedef struct {
     ngx_list_t                        headers;
 
@@ -281,6 +283,9 @@ typedef struct {
 
 typedef void (*ngx_http_client_body_handler_pt)(ngx_http_request_t *r);
 
+/**
+  * HTTP请求 Body
+  */
 typedef struct {
     ngx_temp_file_t                  *temp_file;
     ngx_chain_t                      *bufs;

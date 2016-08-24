@@ -1732,7 +1732,7 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
     ls->addr_ntop = 1;
 
     //!!! 设置 ngx_listening_t的handler为 ngx_http_init_connection
-    //这样当　监听 Socket上有读事件时,会调用 ngx_http_init_connection初始化新连接
+    //这样当　监听 Sockngx_http_init_listeninget上有读事件时,会调用 ngx_http_init_connection初始化新连接
     ls->handler = ngx_http_init_connection;
 
     cscf = addr->default_server;
