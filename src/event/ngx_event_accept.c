@@ -19,7 +19,9 @@ static void ngx_debug_accepted_connection(ngx_event_conf_t *ecf,
 #endif
 
 /**
-  *　根据事件 ev获取新的连接
+  * 根据事件 ev获取新的连接,这个函数被设置为监听Socket对应读事件上的handler函数，
+  * 既当读事件发生时,这个函数被调用，并且在这个函数的结尾调用对应监听 ngx_listening_t上
+  * 设置的handler函数
   */
 void
 ngx_event_accept(ngx_event_t *ev)
@@ -52,6 +54,7 @@ ngx_event_accept(ngx_event_t *ev)
         ev->available = ecf->multi_accept;
     }
     //事件模块中, 将 ngx_event_t的data变量当做 ngx_connection_t结构体
+    //同时 ngx_connection_t结构体的 listening变量指向对应的 ngx_listening_t
     lc = ev->data;
     ls = lc->listening;
     ev->ready = 0;

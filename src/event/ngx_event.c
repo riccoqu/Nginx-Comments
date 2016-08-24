@@ -196,6 +196,7 @@ ngx_module_t  ngx_event_core_module = {
 
 /*
  * 这是函数是事件循环中非常关键的一个函数，它会处理网络事件、定时器事件和两个队列
+ * 主要用于事件循环
  */
 void
 ngx_process_events_and_timers(ngx_cycle_t *cycle)
