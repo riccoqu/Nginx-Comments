@@ -426,7 +426,7 @@ ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 }
 
 /*
- * 遇到 events配置项时调用的方法,可以看到只是做一个判断
+ * 初始化事件模块的函数
  */
 static char *
 ngx_event_init_conf(ngx_cycle_t *cycle, void *conf)
@@ -929,7 +929,8 @@ ngx_send_lowat(ngx_connection_t *c, size_t lowat)
 }
 
 /*
- *　遇到 events关键字时调用的函数,由 Nginx框架调用
+ *　配置文件中遇到 events关键字时调用的函数,由 Nginx框架调用
+ * 用于控制所有事件模块的初始化
  */
 static char *
 ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
