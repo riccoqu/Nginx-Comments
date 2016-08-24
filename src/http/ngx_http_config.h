@@ -24,7 +24,10 @@ typedef struct {
     void        **loc_conf;///<   location级别配置项数组
 } ngx_http_conf_ctx_t;
 
-
+/**
+  * Http模块的ctx结构体,所有属于HTTP模块的模块都有一个
+  * 这样的结构体,并由http核心模块调用进行各模块的初始化
+  */
 typedef struct {
     ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
     ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
